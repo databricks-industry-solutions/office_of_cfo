@@ -29,10 +29,33 @@
 3. Contribute to repositories with pull requests (PRs), ensuring that you always have a second-party review from a capable teammate
 
 
-## 📄 Third-Party Package Licenses - FILL IN WITH YOUR PROJECT'S OPEN SOURCE PACKAGES + LICENSING
+## 📄 Third-Party Package Licenses
 
 &copy; 2025 Databricks, Inc. All rights reserved. The source in this project is provided subject to the Databricks License [https://databricks.com/db-license-source]. All included or referenced third party libraries are subject to the licenses set forth below.
 
+Only dependencies that are **actually distributed** in the published app are listed — the built single-page frontend (`app/frontend/dist/`) and the offline Python wheelhouse (`app/wheels/`). Build- and test-only tooling (Vite, TypeScript, Vitest, Playwright, PostCSS, Autoprefixer) is not shipped and is not listed. Full per-package attribution (version, project URL, copyright) is in [`NOTICE.md`](NOTICE.md).
+
 | Package | License | Copyright |
 |---------|---------|-----------|
-| | | |
+| FastAPI | MIT | 2018 Sebastián Ramírez |
+| Pydantic | MIT | 2017-present Pydantic Services Inc. and contributors |
+| Uvicorn | BSD 3-Clause | 2017-present Encode OSS Ltd. |
+| python-multipart | Apache 2.0 | 2012 Andrew Dunham |
+| Databricks SDK for Python | Apache 2.0 | 2023 Databricks, Inc. |
+| psycopg (binary, pool) | LGPL v3.0 &sup1; | 2020 The Psycopg Team |
+| React / React DOM | MIT | Meta Platforms, Inc. and affiliates |
+| Framer Motion | MIT | 2018 Framer B.V. |
+| clsx | MIT | Luke Edwards |
+| tailwind-merge | MIT | 2021 Dany Castillo |
+| jsPDF | MIT | 2010-2021 James Hall and contributors; yWorks GmbH |
+| jspdf-autotable | MIT | 2014 Simon Bengtsson |
+| html2canvas | MIT | 2012 Niklas von Hertzen |
+| canvg | MIT | 2010 Gabe Lerner and contributors |
+| react-force-graph-2d / force-graph | MIT | 2018 Vasco Asturiano |
+| d3-force-3d | MIT | 2010-2016 Michael Bostock; Vasco Asturiano |
+| d3-sankey | BSD 3-Clause | 2015 Mike Bostock |
+| lucide-react | ISC | 2022 Lucide Contributors |
+| SheetJS (xlsx) | Apache 2.0 | 2012-present SheetJS LLC |
+| DOMPurify | MPL-2.0 OR Apache 2.0 | 2015 Mario Heiderich |
+
+&sup1; psycopg (LGPL v3.0) is distributed unmodified and dynamically linked / imported as a library, satisfying the LGPL distribution conditions. See the LGPL compliance note in [`NOTICE.md`](NOTICE.md).
