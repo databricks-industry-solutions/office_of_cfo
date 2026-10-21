@@ -36,7 +36,7 @@ indicative and may move.
 | **Forecast accuracy**: track forecast vs actuals accuracy over time | FP&A | Planned |
 | **Connected planning & budgeting**: extend forecast vs actuals into planning and budgets | FP&A | Planned |
 | **Architecture diagram** of the solution | Docs | In development |
-| **Minimum data requirements**: the key data needed to power the core features | Docs | Planned |
+| **Minimum data requirements**: the key data needed to power the core features | Docs | In development |
 
 ## Contributing
 
