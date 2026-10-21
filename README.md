@@ -27,12 +27,6 @@
 Approved items and their target quarter. Status as of 2026-10-21; targets are
 indicative and may move.
 
-### Delivered
-
-- **Ad-hoc deep analysis**: upload Excel files for analysis in FP&A Performance & Trends.
-- **Faster pages**: results are cached after the first load.
-- **Genie tab**: Genie has its own tab and supports starting a new chat.
-
 ### Q4 2026
 
 | Item | Area | Status |
@@ -41,7 +35,7 @@ indicative and may move.
 | **Cash flow forecasting**: driver-based forecast, single currency first | FP&A | In development |
 | **Forecast accuracy**: track forecast vs actuals accuracy over time | FP&A | Planned |
 | **Connected planning & budgeting**: extend forecast vs actuals into planning and budgets | FP&A | Planned |
-| **Architecture diagram** of the solution | Docs | Planned |
+| **Architecture diagram** of the solution | Docs | In development |
 | **Minimum data requirements**: the key data needed to power the core features | Docs | Planned |
 
 ## Contributing
