@@ -22,6 +22,22 @@
 
 <img width="1527" height="880" alt="Screenshot 2025-07-23 at 11 10 13 AM" src="https://github.com/user-attachments/assets/0f612882-7123-449b-8349-1835bc59523c" />
 
+## Roadmap
+
+Approved items and their target quarter. Status as of 2026-10-21; targets are
+indicative and may move.
+
+### Q4 2026
+
+| Item | Area | Status |
+|---|---|---|
+| **AI ROI: Return on Tokens Used (ROTU)**: AI spend by business unit and project from Unity AI Gateway, benefits with evidence levels, break-even and portfolio view | New module | In development |
+| **Cash flow forecasting**: driver-based forecast, single currency first | FP&A | In development |
+| **Forecast accuracy**: track forecast vs actuals accuracy over time | FP&A | Planned |
+| **Connected planning & budgeting**: extend forecast vs actuals into planning and budgets | FP&A | Planned |
+| **Architecture diagram** of the solution | Docs | In development |
+| **Minimum data requirements**: the key data needed to power the core features | Docs | In development |
+
 ## Contributing
 
 1. **git clone** this project locally
