@@ -1,94 +1,97 @@
+# Office of the CFO — one bundle for the whole demo.
+#
+# `databricks bundle deploy` creates the workspace infrastructure:
+#   - a serverless SQL warehouse                      resources/warehouse.sql_warehouse.yml
+#   - a Lakebase Autoscaling project, one Postgres
+#     database per industry, owned by the app         resources/lakebase.postgres.yml
+#   - the Lakeflow close pipeline                     resources/close_pipeline.pipeline.yml
+#   - the (paused) AI Gateway usage refresh job       resources/ai_roi_usage.job.yml
+#   - the Databricks App and its environment          resources/app.app.yml
+#
+# scripts/setup.py runs that deploy, seeds the five industries, creates the Genie
+# spaces and dashboards, and starts the app. See README.md.
+#
+# Override any variable with --var="name=value", or put a target of your own in
+# databricks.local.yml (git-ignored, picked up by the *.local.yml include below).
 bundle:
-  name: demo_workflow
+  name: office-of-cfo
+
+include:
+  - resources/*.yml
+  - "*.local.yml"
+
+# Only the app and the pipeline code run in the workspace; the setup scripts run
+# locally, so the data generators, docs and samples are not uploaded. Sync also
+# skips everything in .gitignore (node_modules, .venv, ...).
+sync:
+  paths:
+    - ./app
+    - ./pipelines
 
 variables:
-  # Project name - replace with your solution accelerator name
-  project_name:
-    description: "Name of your solution accelerator"
-    default: "my-solution-accelerator"
-    
-  # The "warehouse_id" variable is used to reference the warehouse used by the dashboard.
-  warehouse_id:
-    lookup:
-      # Replace this with the name of your SQL warehouse.
-      warehouse: "Shared Unity Catalog Serverless"
-      
-  # Environment variable used for deployment paths
-  environment:
-    description: "Deployment environment (dev, staging, prod)"
-    default: "dev"
+  catalog:
+    description: >-
+      Unity Catalog catalog for every demo schema (baseline_* and {industry}_*).
+      setup.py creates it if it does not exist, which needs CREATE CATALOG;
+      otherwise name an existing catalog you can create schemas in.
+    default: office_of_cfo
+  app_name:
+    description: Databricks App name. Also names the SQL warehouse.
+    default: office-of-cfo
+  lakebase_project:
+    description: Lakebase Autoscaling project id; holds one Postgres database per industry.
+    default: office-of-cfo
+  close_period:
+    description: The month-end being closed in the demo data (YYYY-MM).
+    default: "2026-06"
+  contact_email:
+    description: >-
+      Contact address sent in the app's User-Agent; SEC EDGAR refuses filings
+      lookups without one. Defaults to the deploying user; set it when you deploy
+      as a service principal.
+    default: ${workspace.current_user.userName}
+  industries:
+    description: >-
+      Comma-separated industries to install (any of consumer, software, fsi,
+      energy, capmarkets). The app lists only these. Set with setup.py
+      --industries; the Lakebase database of every industry is created regardless.
+    default: consumer,software,fsi,energy,capmarkets
+  company_name:
+    description: >-
+      The company the demo is for. It names the app in the top bar, and
+      competitor benchmarking asks the model for this company's listed peers.
+      No default: scripts/setup.py asks for it (or takes --company) and saves it.
+  app_service_principal:
+    description: >-
+      Client id of the app's service principal, which owns the Lakebase
+      databases. Leave it to setup: on a first install it is the app's own
+      (created in the same deploy); afterwards setup pins the real id. Without
+      the pin, any deploy that updates the app would try to recreate the
+      database-owning Lakebase role, which Lakebase refuses.
+    default: ${resources.apps.office_of_cfo.service_principal_client_id}
+  # Written by scripts/setup.py once the Genie spaces and dashboards exist
+  # (.databricks/bundle/<target>/variable-overrides.json). Empty until then, which
+  # `bundle deploy` accepts but starting the app does not, so setup's app step
+  # runs only after its genie and dashboards steps have filled them.
+  #   genie_space_<industry>      id of the industry's self-service Genie space
+  #   ai_roi_genie_url_<industry> link to the industry's AI ROI Genie space
+  #   ai_roi_dashboard_url_<industry> link to the industry's AI ROI dashboard
+  genie_space_consumer: {default: ""}
+  genie_space_software: {default: ""}
+  genie_space_fsi: {default: ""}
+  genie_space_energy: {default: ""}
+  genie_space_capmarkets: {default: ""}
+  ai_roi_genie_url_consumer: {default: ""}
+  ai_roi_genie_url_software: {default: ""}
+  ai_roi_genie_url_fsi: {default: ""}
+  ai_roi_genie_url_energy: {default: ""}
+  ai_roi_genie_url_capmarkets: {default: ""}
+  ai_roi_dashboard_url_consumer: {default: ""}
+  ai_roi_dashboard_url_software: {default: ""}
+  ai_roi_dashboard_url_fsi: {default: ""}
+  ai_roi_dashboard_url_energy: {default: ""}
+  ai_roi_dashboard_url_capmarkets: {default: ""}
 
 targets:
-  dev:
+  default:
     default: true
-    mode: development
-
-# Customize the resources below based on your solution accelerator needs
-resources:
-  # Uncomment and customize if you have Databricks Apps
-  # apps:
-  #   your_app:
-  #     name: "your-app-name"
-  #     description: "Your app description"
-  #     source_code_path: "/Users/${workspace.current_user.userName}/${var.project_name}-${var.environment}/files/apps/your_app"
-
-  # Uncomment and customize if you have dashboards
-  # dashboards:
-  #   your_dashboard:
-  #     display_name: "Your Dashboard"
-  #     file_path: "./dashboards/your_dashboard.lvdash.json"
-  #     warehouse_id: "${var.warehouse_id}"
-
-  # Example job workflow - customize based on your notebooks
-  jobs:
-    example_workflow:
-      name: "${var.project_name} - Example Workflow"
-      tasks:
-        - task_key: example_notebook
-          notebook_task:
-            notebook_path: "./notebooks/example_notebook.ipynb"
-        - task_key: example_databricks_notebook
-          depends_on:
-            - task_key: example_notebook
-          notebook_task:
-            notebook_path: "./notebooks/example_databricks_notebook.py"
-
-# Example resources you can uncomment and customize:
-# resources:
-#   apps:
-#     your_app:
-#       name: "your-app-name"
-#       description: "Your app description"
-#       source_code_path: "./apps/your_app"
-#
-#   jobs:
-#     your_workflow:
-#       name: "Your Workflow Name"
-#       tasks:
-#         - task_key: first_task
-#           notebook_task:
-#             notebook_path: "./notebooks/your_first_notebook.ipynb"
-#         - task_key: second_task
-#           depends_on:
-#             - task_key: first_task
-#           notebook_task:
-#             notebook_path: "./notebooks/your_second_notebook.ipynb"
-#
-#   pipelines:
-#     your_pipeline:
-#       name: "Your Pipeline"
-#       storage: "/Shared/your-pipeline"
-#       configuration:
-#         your_config: "value"
-#
-#   models:
-#     your_model:
-#       name: "Your Model"
-#       model_path: "models/your_model"
-#
-#   dashboards:
-#     your_dashboard:
-#       display_name: "Your Dashboard"
-#       file_path: "./dashboards/your_dashboard.lvdash.json"
-
-# For more options and schema, see: https://docs.databricks.com/aws/en/dev-tools/bundles/settings

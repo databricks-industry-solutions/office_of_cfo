@@ -1,0 +1,83 @@
+# The Databricks App. Its environment is declared here (not in app/app.yaml) so
+# every workspace-specific value comes from this bundle: the catalog variable,
+# the warehouse and Lakebase resources above, and the Genie/dashboard ids that
+# scripts/setup.py records after it creates them.
+resources:
+  apps:
+    office_of_cfo:
+      name: ${var.app_name}
+      description: Office of the CFO — month-end close and FP&A across five industries.
+      source_code_path: ../app
+      resources:
+        - name: sql-warehouse
+          sql_warehouse:
+            id: ${resources.sql_warehouses.cfo_warehouse.id}
+            permission: CAN_USE
+      config:
+        command: [python, -m, uvicorn, "app:app", --host, 0.0.0.0, --port, "8000"]
+        env:
+          # Each industry reads {catalog}.{industry}_* and its own Lakebase database
+          # (names match resources/lakebase.postgres.yml; literal to avoid a
+          # deploy-order cycle, since the databases are owned by this app).
+          - name: CFO_MULTI_INDUSTRY
+            value: "1"
+          - name: MULTI_CATALOG
+            value: "${var.catalog}"
+          - name: CLOSE_PERIOD
+            value: "${var.close_period}"
+          # Frozen 'today' for Month-End Close, mid-cycle for the June close.
+          - name: DEMO_AS_OF
+            value: "2026-07-15"
+          - name: DATABRICKS_WAREHOUSE_ID
+            value_from: sql-warehouse
+          - name: LAKEBASE_PROJECT
+            value: "${var.lakebase_project}"
+          - name: PGDATABASE_CONSUMER
+            value: "close_consumer"
+          - name: PGDATABASE_SOFTWARE
+            value: "close_software"
+          - name: PGDATABASE_FSI
+            value: "close_fsi"
+          - name: PGDATABASE_ENERGY
+            value: "close_energy"
+          - name: PGDATABASE_CAPMARKETS
+            value: "close_capmarkets"
+          # Contact address in the User-Agent; SEC filings lookups are refused without one.
+          - name: CFO_CONTACT_EMAIL
+            value: "${var.contact_email}"
+          # The company the demo is for: top-bar name and the peers benchmarking suggests.
+          - name: CFO_COMPANY_NAME
+            value: "${var.company_name}"
+          # Installed industries; the industry switcher lists only these.
+          - name: CFO_INDUSTRIES
+            value: "${var.industries}"
+          - name: GENIE_SPACE_ID_CONSUMER
+            value: "${var.genie_space_consumer}"
+          - name: GENIE_SPACE_ID_SOFTWARE
+            value: "${var.genie_space_software}"
+          - name: GENIE_SPACE_ID_FSI
+            value: "${var.genie_space_fsi}"
+          - name: GENIE_SPACE_ID_ENERGY
+            value: "${var.genie_space_energy}"
+          - name: GENIE_SPACE_ID_CAPMARKETS
+            value: "${var.genie_space_capmarkets}"
+          - name: AI_ROI_GENIE_URL_CONSUMER
+            value: "${var.ai_roi_genie_url_consumer}"
+          - name: AI_ROI_GENIE_URL_SOFTWARE
+            value: "${var.ai_roi_genie_url_software}"
+          - name: AI_ROI_GENIE_URL_FSI
+            value: "${var.ai_roi_genie_url_fsi}"
+          - name: AI_ROI_GENIE_URL_ENERGY
+            value: "${var.ai_roi_genie_url_energy}"
+          - name: AI_ROI_GENIE_URL_CAPMARKETS
+            value: "${var.ai_roi_genie_url_capmarkets}"
+          - name: AI_ROI_DASHBOARD_URL_CONSUMER
+            value: "${var.ai_roi_dashboard_url_consumer}"
+          - name: AI_ROI_DASHBOARD_URL_SOFTWARE
+            value: "${var.ai_roi_dashboard_url_software}"
+          - name: AI_ROI_DASHBOARD_URL_FSI
+            value: "${var.ai_roi_dashboard_url_fsi}"
+          - name: AI_ROI_DASHBOARD_URL_ENERGY
+            value: "${var.ai_roi_dashboard_url_energy}"
+          - name: AI_ROI_DASHBOARD_URL_CAPMARKETS
+            value: "${var.ai_roi_dashboard_url_capmarkets}"

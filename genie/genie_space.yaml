@@ -1,0 +1,40 @@
+# Genie space configuration for "The Self-Healing Close — CFO Self-Service".
+# This is a template for industry-specific spaces. The curate_space.py script
+# fills in the {industry}_serving and {industry}_ops schema names per industry.
+#
+# To create or update a space, use the curate_space.py script:
+#   GENIE_SPACE_ID_<INDUSTRY>=<space_id> uv run --with databricks-sdk python genie/curate_space.py <industry>
+
+display_name: "The Self-Healing Close — CFO Self-Service"
+description: >
+  CFO self-service for the month-end close: the numbers and whether they can be
+  trusted. Ask about profitability and working-capital KPIs (revenue, net income,
+  OpEx, DSO/DPO/DIO, cash conversion cycle) by region / business unit / legal entity /
+  business line from the governed close_metrics metric view; operating-expense variance
+  to forecast; the close's go/no-go data-quality status; and the subledger-to-GL
+  reconciliation breaks still open. Scoped to the current close on live, post-adjustment,
+  governed data.
+
+# Focused per Genie best practices (docs.databricks.com/aws/en/genie/best-practices):
+# four tables, anchored on the governed metric view. The metric view pre-joins and
+# pre-defines every KPI, so it replaces the redundant balance/KPI tables
+# (trial_balance_dq, account_balance_by_bu, working_capital_kpis, kpi_history) that
+# previously made Genie guess which source to use. Attribution (close_adjustments),
+# the ZeroOps inbox, per-check DQ (dq_results) and the raw dimension tables were
+# removed as out-of-scope for CFO number self-service — they remain in the app UI.
+tables:
+  - "{{serving}}.close_metrics"   # governed UC metric view: Revenue, OpEx, Net Income, DSO/DPO/DIO, CCC by region/BU/legal entity/business line
+  - "{{serving}}.opex_variance"   # operating-expense actual vs forecast by account x BU
+  - "{{ops}}.dq_summary"          # close go/no-go data-quality badge (fail/warn/break counts)
+  - "{{ops}}.recon_breaks"        # subledger-to-GL reconciliation breaks still open
+
+# Neutral question set (CFO self-service + trust questions). Vertical variants in question_sets.md.
+# Every question maps to one of the four tables above.
+sample_questions:
+  - "What's our operating-expense variance to forecast this month, and which business unit is driving it?"  # opex_variance
+  - "What is our net income this period by region?"                                                          # close_metrics
+  - "What are our DSO, DPO and DIO this month, and how do they compare by region?"                           # close_metrics
+  - "What's our cash conversion cycle, and which business line is driving it?"                                # close_metrics (CCC measure)
+  - "What is the data-quality status of this close right now?"                                                # dq_summary
+  - "Are all subledgers and manual adjustments fully loaded and passing quality checks for this close?"       # dq_summary
+  - "Show the reconciliation breaks that still need review."                                                  # recon_breaks

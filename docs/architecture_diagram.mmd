@@ -1,0 +1,83 @@
+flowchart TB
+
+%% ================= LAYER 1: SOURCES =================
+subgraph SOURCES["① SOURCES"]
+    direction LR
+    SP["SharePoint — Month-End Close folder<br/>CSV / XLSX adjustments"]
+    GL["Subledgers + GL<br/>SAP · Workday · AFAS · Bank feed"]
+    DOCS["Source documents<br/>Competitor filings & contracts (PDF)"]
+end
+
+%% ================= LAYER 2: DATABRICKS PLATFORM =================
+subgraph PLATFORM["② DATABRICKS PLATFORM — governed by Unity Catalog"]
+    direction TB
+    UC["🛡️ Unity Catalog — governance · lineage · ACLs · DQ"]
+    LF["Lakeflow pipeline<br/>Ingest → Governed Close → Data Quality<br/>(bronze / silver)"]
+    FM["Foundation Model API<br/>ai_parse_document · ai_extract · ai_query<br/>offline IDP for Close Support"]
+    SV["Serving views<br/>real-time Trial Balance"]
+    LB["Lakebase (Postgres)<br/>OLTP system of record<br/>adjustments + close tasks"]
+    GEN["Genie Space<br/>natural-language query"]
+end
+
+%% ================= LAYER 3: APPLICATION =================
+subgraph APP["③ APPLICATION — Databricks App"]
+    direction LR
+    API["FastAPI backend (Python)"]
+    SPA["React SPA frontend<br/>served as static files by FastAPI"]
+end
+
+%% ================= LAYER 4: USERS =================
+subgraph USERS["④ USERS"]
+    direction LR
+    CFO["CFO"]
+    CTRL["Controller"]
+    ACCT["Accountant"]
+end
+
+%% ---- Sources into the platform ----
+SP --> LF
+GL --> LF
+DOCS --> FM
+
+%% ---- Platform internal flow ----
+FM -->|feeds governed<br/>Close Support tables| LF
+LF --> SV
+LB -.->|adjustments flow<br/>back to the lake| LF
+
+%% ---- Unity Catalog governs the platform ----
+UC -. governs .-> LF
+UC -. governs .-> FM
+UC -. governs .-> SV
+UC -. governs .-> LB
+UC -. governs .-> GEN
+
+%% ---- Platform delivers data down to the app ----
+SV -->|DBSQL — read governed UC tables| API
+LB <-->|Postgres pool — read / write| API
+GEN -->|Genie API — NL query| API
+
+%% ---- App serves the UI ----
+API --> SPA
+
+%% ---- App presents to users ----
+SPA --> CFO
+SPA --> CTRL
+SPA --> ACCT
+
+%% ================= STYLING (Databricks orange/red) =================
+classDef source   fill:#EEF2F6,stroke:#5A6B7B,stroke-width:1px,color:#1B3139;
+classDef data     fill:#FFF3EC,stroke:#FF3621,stroke-width:1.5px,color:#1B3139;
+classDef gov      fill:#FF3621,stroke:#C42B18,stroke-width:2px,color:#FFFFFF;
+classDef app      fill:#FFE3D6,stroke:#FF5F46,stroke-width:1.5px,color:#1B3139;
+classDef user     fill:#1B3139,stroke:#0E1A20,stroke-width:1px,color:#FFFFFF;
+
+class SP,GL,DOCS source;
+class LF,SV,LB,GEN,FM data;
+class UC gov;
+class API,SPA app;
+class CFO,CTRL,ACCT user;
+
+style SOURCES  fill:#F7F9FB,stroke:#B7C2CC,color:#1B3139;
+style PLATFORM fill:#FFF8F4,stroke:#FF3621,color:#1B3139;
+style APP      fill:#FFF1EA,stroke:#FF5F46,color:#1B3139;
+style USERS    fill:#EDEFF1,stroke:#8A97A3,color:#1B3139;

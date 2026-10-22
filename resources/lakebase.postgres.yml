@@ -1,0 +1,52 @@
+# Lakebase Autoscaling: one project, one Postgres database per industry, so each
+# industry's OLTP state (close tasks, adjustments, approvals, scenarios) is
+# isolated. The app's service principal gets its own Postgres role and owns the
+# databases, so it can create its tables on first request without manual grants.
+# The compute scales to zero after 5 idle minutes.
+resources:
+  postgres_projects:
+    cfo_lakebase:
+      project_id: ${var.lakebase_project}
+      display_name: Office of the CFO
+      default_endpoint_settings:
+        autoscaling_limit_min_cu: 0.5
+        autoscaling_limit_max_cu: 2
+        suspend_timeout_duration: 300s
+      permissions:
+        - service_principal_name: ${var.app_service_principal}
+          level: CAN_USE
+
+  postgres_roles:
+    app:
+      role_id: office-of-cfo-app
+      parent: projects/${resources.postgres_projects.cfo_lakebase.project_id}/branches/production
+      postgres_role: ${var.app_service_principal}
+      identity_type: SERVICE_PRINCIPAL
+      auth_method: LAKEBASE_OAUTH_V1
+
+  postgres_databases:
+    consumer:
+      database_id: close-consumer
+      postgres_database: close_consumer
+      parent: projects/${resources.postgres_projects.cfo_lakebase.project_id}/branches/production
+      role: projects/${resources.postgres_projects.cfo_lakebase.project_id}/branches/production/roles/${resources.postgres_roles.app.role_id}
+    software:
+      database_id: close-software
+      postgres_database: close_software
+      parent: projects/${resources.postgres_projects.cfo_lakebase.project_id}/branches/production
+      role: projects/${resources.postgres_projects.cfo_lakebase.project_id}/branches/production/roles/${resources.postgres_roles.app.role_id}
+    fsi:
+      database_id: close-fsi
+      postgres_database: close_fsi
+      parent: projects/${resources.postgres_projects.cfo_lakebase.project_id}/branches/production
+      role: projects/${resources.postgres_projects.cfo_lakebase.project_id}/branches/production/roles/${resources.postgres_roles.app.role_id}
+    energy:
+      database_id: close-energy
+      postgres_database: close_energy
+      parent: projects/${resources.postgres_projects.cfo_lakebase.project_id}/branches/production
+      role: projects/${resources.postgres_projects.cfo_lakebase.project_id}/branches/production/roles/${resources.postgres_roles.app.role_id}
+    capmarkets:
+      database_id: close-capmarkets
+      postgres_database: close_capmarkets
+      parent: projects/${resources.postgres_projects.cfo_lakebase.project_id}/branches/production
+      role: projects/${resources.postgres_projects.cfo_lakebase.project_id}/branches/production/roles/${resources.postgres_roles.app.role_id}

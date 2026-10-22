@@ -1,0 +1,22 @@
+[project]
+name = "cfo-close-app"
+version = "0.1.0"
+description = "Reconciliation & adjustments app for The Self-Healing Close (Act 4)"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "psycopg[binary,pool]>=3.2",
+    "databricks-sdk>=0.68",
+    "pydantic>=2.7",
+    "python-multipart>=0.0.9",
+]
+
+# Offline build: the Databricks Apps package proxy can't serve fresh wheels in
+# this workspace (proven via an obscure-package probe). Vendor Linux/cp311 wheels
+# under ./wheels and resolve from them with no index. Constrained to Linux so the
+# lockfile (and the builder's `uv sync --locked`) is fully offline-consistent.
+[tool.uv]
+environments = ["sys_platform == 'linux'"]
+no-index = true
+find-links = ["wheels"]

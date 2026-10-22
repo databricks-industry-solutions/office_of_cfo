@@ -1,0 +1,33 @@
+# Shape of the demo data. Every setup script reads this file through
+# data_generation/_common.py.
+#
+# Workspace-specific values are NOT stored here. scripts/setup.py reads them from
+# the deployed bundle (databricks.yml) and passes them to each script as
+# environment variables, which take precedence over this file:
+#   DATABRICKS_CONFIG_PROFILE  CLI profile (omit inside a Databricks job/notebook)
+#   DATABRICKS_WAREHOUSE_ID    SQL warehouse that runs every statement
+#   CFO_CATALOG                Unity Catalog catalog that holds all demo schemas
+
+databricks:
+  profile: null
+  warehouse_id: null
+
+unity_catalog:
+  catalog: office_of_cfo
+  # Baseline schemas: one synthetic company, built once and then cloned and
+  # relabelled into every industry's own {industry}_{raw,close,serving,ops} set.
+  schemas:
+    raw: baseline_raw            # landing tables from ingest
+    close: baseline_close        # governed, DQ-validated close tables
+    serving: baseline_serving    # trial balance, metric views, DQ badge
+    ops: baseline_ops            # DQ results, insights inbox, spreadsheet provenance
+  volume: close_folder           # simulates the shared "Month-End Close" folder
+
+close_period: "2026-06"      # the demo month-end being closed (latest / active close)
+
+# How many trailing months of history the generator produces (inclusive of the
+# active close). 24 gives two full years so year-over-year comparisons work in
+# the Historical Insights tab. The GL/subledgers/statements become period-aware;
+# the close *workflow* (tasks, DQ, recon) stays scoped to close_period.
+history_months: 24
+

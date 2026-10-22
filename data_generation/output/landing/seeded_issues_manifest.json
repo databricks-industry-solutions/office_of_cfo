@@ -1,0 +1,59 @@
+{
+  "period": "2026-06",
+  "seeded_issues": [
+    {
+      "id": "timing_break",
+      "type": "reconciliation",
+      "detail": "AP invoices ['AP-2026-06-00069', 'AP-2026-06-00070'] (BU-300, $11,877.57) in subledger but delayed in GL",
+      "surfaces_in": "Act 4 recon app aged items"
+    },
+    {
+      "id": "unbalanced_batch",
+      "type": "validity",
+      "detail": "Legacy-ERP JE JE-2026-06-LEGACY01 debits != credits by $1,250.00",
+      "surfaces_in": "Act 2 DQ validity (debits=credits)"
+    },
+    {
+      "id": "orphan_account",
+      "type": "referential_integrity",
+      "detail": "One AP invoice references account 99999 not in chart_of_accounts",
+      "surfaces_in": "Act 2 DQ referential integrity"
+    },
+    {
+      "id": "stale_feed",
+      "type": "freshness",
+      "detail": "SAP-FixedAssets feed load_ts is 3 days stale",
+      "surfaces_in": "Act 2 DQ freshness"
+    },
+    {
+      "id": "column_rename",
+      "type": "schema_evolution",
+      "detail": "accruals_2026-06.csv renamed `amount` -> `adjustment_amount`",
+      "surfaces_in": "Act 2 schema evolution + ZeroOps self-heal"
+    },
+    {
+      "id": "inventory_break",
+      "type": "reconciliation",
+      "detail": "BU-100 inventory relief (COGS) of $86,162.19 missing from GL",
+      "surfaces_in": "Act 4 recon app (Inventory control)"
+    },
+    {
+      "id": "bank_timing_break",
+      "type": "reconciliation",
+      "detail": "BU-400 bank statement shows $8,500.00 deposit in transit vs GL cash",
+      "surfaces_in": "Act 4 recon app (Bank control)"
+    },
+    {
+      "id": "po_invoice_mismatch",
+      "type": "three_way_match",
+      "detail": "PO PO-2026-06-00004 amount differs from its matched invoice",
+      "surfaces_in": "Act 2 DQ procurement 3-way match"
+    },
+    {
+      "id": "ingestion_rejects",
+      "type": "ingestion",
+      "detail": "AP schema reject, AR duplicate key, Workday payroll timeout",
+      "surfaces_in": "Data & Audit lineage Sankey (ingestion stage)"
+    }
+  ]
+}

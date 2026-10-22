@@ -1,0 +1,113 @@
+# Vertical overlays — config-only localization
+# The core demo is industry-neutral. To localize for a prospect, swap ONLY the
+# surface layer: account labels, KPIs, source-system names, and the Genie
+# question set. The architecture, six-act flow, synthetic GL/subledger
+# structure, and DQ rules stay identical. Presenter selects an overlay before
+# the session.
+
+universal_core:
+  # Never changes across verticals.
+  subledgers: [accounts_payable, accounts_receivable, payroll, fixed_assets]
+  general_ledger: true
+  manual_adjustments: [accrual, reclass, intercompany_elimination, fx_overlay]
+  context: [SOX_302_404, GAAP, IFRS, ICFR]
+  reconciliation_app: true
+  lineage_story: true
+  neutral_genie_questions:
+    - "What's our operating-expense variance to forecast this month, and which business unit is driving it?"
+    - "Are all subledgers and manual adjustments fully loaded and passing quality checks for this close?"
+    - "Which manual adjustments hit operating expense this month, and who entered them?"
+
+verticals:
+  manufacturing:
+    label: Manufacturing
+    add_subledgers: [inventory, cost_of_goods_sold, work_in_progress, standard_cost_variance]
+    kpis: [gross_margin, cogs, inventory_turns, manufacturing_variance, plant_operating_expense]
+    source_systems: [SAP, Oracle ERP, "plant/MES feeds"]
+    spreadsheet_examples: [standard_cost_roll_adjustments, inventory_write_downs, plant_accruals]
+    genie_question: "What's our COGS variance to standard this month, and which plant is driving it?"
+
+  financial_services:
+    label: Financial Services
+    add_subledgers: [loan, deposit, card, trading]
+    kpis: [net_interest_income, net_interest_margin]
+    downstream_ratios: [LCR, NSFR]
+    source_systems: [FIS, Fiserv, Temenos, TSYS]
+    regulatory_color: [Basel_III, CCAR, BCBS_239]
+    spreadsheet_examples: [manual_loan_loss_provisioning_overlays, intercompany_eliminations_across_legal_entities]
+    genie_question: "What's our NII variance to forecast this month, and which line of business is driving it?"
+
+  oil_and_gas:
+    label: Oil & Gas / Petroleum
+    add_subledgers: [joint_interest_billing, production_revenue_accounting, lease_operating_expense, royalty_depletion_dda]
+    kpis: [lifting_cost_per_barrel, netback, loe, dda, reserve_based_metrics]
+    source_systems: [SAP, Oracle, "production-accounting (Quorum, P2/Enverus-type)"]
+    spreadsheet_examples: [jib_allocations, production_accruals, commodity_price_fx_revaluation, royalty_true_ups]
+    genie_question: "What's our lease operating expense variance by field this month, and which adjustments drove the change?"
+
+  # ---------------------------------------------------------------------------
+  # First-class multi-industry verticals (own schema set + Lakebase + headline
+  # KPIs). Headline KPIs grounded in FY2025 filings; see data_generation/
+  # industry_profiles.py for the authoritative per-industry relabel + KPI data.
+  # ---------------------------------------------------------------------------
+  energy_utilities:
+    id: energy
+    label: Energy & Utilities
+    model_company: Generic integrated energy company (illustrative; brand-free, USD)
+    source_systems: ["SAP S/4HANA Utilities", "SAP IS-U (Billing)", "ETRM (Trading)", Workday, "Bank Feed"]
+    cogs_label: Cost of Energy
+    segments: [Energy Supply, Generation, Trading & Optimization]
+    headline_kpis:
+      - {id: adjusted_ebitda, label: Group Adjusted EBITDA, unit: "$bn", good: up}
+      - {id: adjusted_operating_profit, label: Adjusted Operating Profit, unit: "$bn", good: up}
+      - {id: free_cash_flow, label: Free Cash Flow, unit: "$bn", good: up}
+      - {id: adjusted_eps, label: Adjusted EPS, unit: "$", good: up}
+      - {id: total_retail_customers, label: Total Energy Customers, unit: m, good: up}
+      - {id: renewables_share, label: Renewables Share of Generation, unit: "%", good: up}
+    genie_question: "What's our wholesale energy cost variance to forecast this month, and which business unit is driving it?"
+
+  consumer_goods:
+    id: consumer
+    label: Consumer Goods
+    model_company: Global home & personal care and foods group (illustrative, FY2025)
+    source_systems: ["SAP S/4HANA", "SAP ECC", Concur, Workday, "Bank Feed"]
+    cogs_label: Cost of Goods Sold
+    segments: [Beauty & Wellbeing, Personal Care, Home Care, Foods]
+    headline_kpis:
+      - {id: usg, label: Underlying Sales Growth, unit: "%", good: up}
+      - {id: gross_margin, label: Gross Margin, unit: "%", good: up}
+      - {id: underlying_operating_margin, label: Underlying Operating Margin, unit: "%", good: up}
+      - {id: free_cash_flow, label: Free Cash Flow, unit: "€bn", good: up}
+      - {id: cash_conversion_pct, label: Cash Conversion, unit: "%", good: up}
+      - {id: underlying_eps, label: Underlying EPS, unit: "€", good: up}
+    genie_question: "What's our underlying sales growth this month, split by volume and price, and which category is driving it?"
+
+  software_saas:
+    id: software
+    label: Software & SaaS
+    model_company: Global enterprise SaaS vendor (illustrative, FY2025)
+    source_systems: [NetSuite, "Stripe / Bank Feed", Workday]
+    cogs_label: Cost of Revenue
+    headline_kpis:
+      - {id: total_revenue_growth, label: Total Revenue Growth (Y/Y), unit: "%", good: up}
+      - {id: subscription_revenue, label: Subscription & Support Revenue, unit: "$bn", good: up}
+      - {id: crpo, label: Current RPO (cRPO), unit: "$bn", good: up}
+      - {id: total_rpo, label: Total RPO, unit: "$bn", good: up}
+      - {id: non_gaap_operating_margin, label: Non-GAAP Operating Margin, unit: "%", good: up}
+      - {id: free_cash_flow, label: Free Cash Flow, unit: "$bn", good: up}
+    genie_question: "What's our operating-expense variance to forecast this month, and which business unit is driving it?"
+
+  financial_services_bank:
+    id: fsi
+    label: Financial Services
+    model_company: European retail & wholesale bank (illustrative, FY2025)
+    source_systems: ["Core Banking (FIS)", Workday, "Bank Feed"]
+    cogs_label: Cost of Services
+    headline_kpis:
+      - {id: net_interest_income, label: Net Interest Income, unit: "€m", good: up}
+      - {id: nim, label: Net Interest Margin, unit: "%", good: up}
+      - {id: fee_income_growth, label: Fee Income Growth (Y/Y), unit: "%", good: up}
+      - {id: cost_income_ratio, label: Cost/Income Ratio, unit: "%", good: down}
+      - {id: roe, label: Return on Equity, unit: "%", good: up}
+      - {id: cet1_ratio, label: CET1 Ratio, unit: "%", good: up}
+    genie_question: "What's our net interest income variance to forecast this month, and which line of business is driving it?"

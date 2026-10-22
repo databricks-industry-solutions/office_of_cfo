@@ -1,0 +1,27 @@
+command:
+  - "python"
+  - "-m"
+  - "uvicorn"
+  - "app:app"
+  - "--host"
+  - "0.0.0.0"
+  - "--port"
+  - "8000"
+
+# Workspace-neutral settings only. Everything that names a workspace object
+# (catalog, SQL warehouse, Lakebase project/databases, Genie spaces, dashboards)
+# is set by the bundle in resources/app.app.yml, which overrides this file when
+# the app is deployed with `databricks bundle deploy`.
+# (Offline Python build config lives in pyproject.toml [tool.uv]: no-index + find-links.)
+env:
+  # Each industry reads its own {catalog}.{industry}_* schemas and its own
+  # Lakebase database (see server/lakebase.py).
+  - name: CFO_MULTI_INDUSTRY
+    value: "1"
+  - name: CLOSE_PERIOD
+    value: "2026-06"
+  # Frozen "today" for Month-End Close (days-to-target, burn-down, overdue).
+  # Keep near the June close target (~T+13 ≈ 2026-07-17) so demos stay mid-cycle
+  # without regenerating warehouse data when the wall clock moves.
+  - name: DEMO_AS_OF
+    value: "2026-07-15"

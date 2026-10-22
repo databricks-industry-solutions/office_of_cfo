@@ -1,0 +1,9 @@
+Account,Month,Amt,Version,Region,Notes
+Revenue,2026-06,1000,Flash,EMEA,Active close month
+Cost of Revenue,2026-06,380,Flash,EMEA,Mapped P&L line
+Operating Expenses,2026-06,300,Flash,EMEA,Controller review
+Discretionary projects,2026-06,40,Flash,EMEA,Unmapped row
+Revenue,2026-09,1030,Flash,EMEA,Clean flat upload
+Cost of Revenue,2026-09,392,Flash,EMEA,Mapped P&L line
+Operating Expenses,2026-09,324,Flash,EMEA,Controller review
+Discretionary projects,2026-09,52,Flash,EMEA,Unmapped row

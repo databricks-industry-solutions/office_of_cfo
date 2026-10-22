@@ -1,0 +1,363 @@
+version = 1
+revision = 3
+requires-python = ">=3.11"
+resolution-markers = [
+    "sys_platform == 'linux'",
+]
+supported-markers = [
+    "sys_platform == 'linux'",
+]
+
+[[package]]
+name = "annotated-doc"
+version = "0.0.4"
+source = { registry = "wheels" }
+wheels = [
+    { path = "annotated_doc-0.0.4-py3-none-any.whl" },
+    { path = "annotated_doc-0.0.4-py3-none-any.whl" },
+]
+
+[[package]]
+name = "annotated-types"
+version = "0.7.0"
+source = { registry = "wheels" }
+wheels = [
+    { path = "annotated_types-0.7.0-py3-none-any.whl" },
+    { path = "annotated_types-0.7.0-py3-none-any.whl" },
+]
+
+[[package]]
+name = "anyio"
+version = "4.14.0"
+source = { registry = "wheels" }
+dependencies = [
+    { name = "idna", marker = "sys_platform == 'linux'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13' and sys_platform == 'linux'" },
+]
+wheels = [
+    { path = "anyio-4.14.0-py3-none-any.whl" },
+    { path = "anyio-4.14.0-py3-none-any.whl" },
+]
+
+[[package]]
+name = "certifi"
+version = "2026.6.17"
+source = { registry = "wheels" }
+wheels = [
+    { path = "certifi-2026.6.17-py3-none-any.whl" },
+    { path = "certifi-2026.6.17-py3-none-any.whl" },
+]
+
+[[package]]
+name = "cffi"
+version = "2.0.0"
+source = { registry = "wheels" }
+dependencies = [
+    { name = "pycparser", marker = "implementation_name != 'PyPy' and sys_platform == 'linux'" },
+]
+wheels = [
+    { path = "cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl" },
+    { path = "cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl" },
+]
+
+[[package]]
+name = "cfo-close-app"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "databricks-sdk", marker = "sys_platform == 'linux'" },
+    { name = "fastapi", marker = "sys_platform == 'linux'" },
+    { name = "psycopg", extra = ["binary", "pool"], marker = "sys_platform == 'linux'" },
+    { name = "pydantic", marker = "sys_platform == 'linux'" },
+    { name = "python-multipart", marker = "sys_platform == 'linux'" },
+    { name = "uvicorn", marker = "sys_platform == 'linux'" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "databricks-sdk", specifier = ">=0.68" },
+    { name = "fastapi", specifier = ">=0.115" },
+    { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.2" },
+    { name = "pydantic", specifier = ">=2.7" },
+    { name = "python-multipart", specifier = ">=0.0.9" },
+    { name = "uvicorn", specifier = ">=0.30" },
+]
+
+[[package]]
+name = "charset-normalizer"
+version = "3.4.7"
+source = { registry = "wheels" }
+wheels = [
+    { path = "charset_normalizer-3.4.7-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl" },
+    { path = "charset_normalizer-3.4.7-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl" },
+]
+
+[[package]]
+name = "click"
+version = "8.4.1"
+source = { registry = "wheels" }
+wheels = [
+    { path = "click-8.4.1-py3-none-any.whl" },
+    { path = "click-8.4.1-py3-none-any.whl" },
+]
+
+[[package]]
+name = "cryptography"
+version = "49.0.0"
+source = { registry = "wheels" }
+dependencies = [
+    { name = "cffi", marker = "platform_python_implementation != 'PyPy' and sys_platform == 'linux'" },
+]
+wheels = [
+    { path = "cryptography-49.0.0-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl" },
+    { path = "cryptography-49.0.0-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl" },
+]
+
+[[package]]
+name = "databricks-sdk"
+version = "0.119.0"
+source = { registry = "wheels" }
+dependencies = [
+    { name = "google-auth", marker = "sys_platform == 'linux'" },
+    { name = "protobuf", marker = "sys_platform == 'linux'" },
+    { name = "requests", marker = "sys_platform == 'linux'" },
+    { name = "urllib3", marker = "sys_platform == 'linux'" },
+]
+wheels = [
+    { path = "databricks_sdk-0.119.0-py3-none-any.whl" },
+    { path = "databricks_sdk-0.119.0-py3-none-any.whl" },
+]
+
+[[package]]
+name = "fastapi"
+version = "0.138.0"
+source = { registry = "wheels" }
+dependencies = [
+    { name = "annotated-doc", marker = "sys_platform == 'linux'" },
+    { name = "pydantic", marker = "sys_platform == 'linux'" },
+    { name = "starlette", marker = "sys_platform == 'linux'" },
+    { name = "typing-extensions", marker = "sys_platform == 'linux'" },
+    { name = "typing-inspection", marker = "sys_platform == 'linux'" },
+]
+wheels = [
+    { path = "fastapi-0.138.0-py3-none-any.whl" },
+    { path = "fastapi-0.138.0-py3-none-any.whl" },
+]
+
+[[package]]
+name = "google-auth"
+version = "2.55.0"
+source = { registry = "wheels" }
+dependencies = [
+    { name = "cryptography", marker = "sys_platform == 'linux'" },
+    { name = "pyasn1-modules", marker = "sys_platform == 'linux'" },
+]
+wheels = [
+    { path = "google_auth-2.55.0-py3-none-any.whl" },
+    { path = "google_auth-2.55.0-py3-none-any.whl" },
+]
+
+[[package]]
+name = "h11"
+version = "0.16.0"
+source = { registry = "wheels" }
+wheels = [
+    { path = "h11-0.16.0-py3-none-any.whl" },
+    { path = "h11-0.16.0-py3-none-any.whl" },
+]
+
+[[package]]
+name = "idna"
+version = "3.18"
+source = { registry = "wheels" }
+wheels = [
+    { path = "idna-3.18-py3-none-any.whl" },
+    { path = "idna-3.18-py3-none-any.whl" },
+]
+
+[[package]]
+name = "protobuf"
+version = "6.33.6"
+source = { registry = "wheels" }
+wheels = [
+    { path = "protobuf-6.33.6-cp39-abi3-manylinux2014_x86_64.whl" },
+    { path = "protobuf-6.33.6-cp39-abi3-manylinux2014_x86_64.whl" },
+]
+
+[[package]]
+name = "psycopg"
+version = "3.3.4"
+source = { registry = "wheels" }
+dependencies = [
+    { name = "typing-extensions", marker = "python_full_version < '3.13' and sys_platform == 'linux'" },
+]
+wheels = [
+    { path = "psycopg-3.3.4-py3-none-any.whl" },
+    { path = "psycopg-3.3.4-py3-none-any.whl" },
+]
+
+[package.optional-dependencies]
+binary = [
+    { name = "psycopg-binary", marker = "implementation_name != 'pypy' and sys_platform == 'linux'" },
+]
+pool = [
+    { name = "psycopg-pool", marker = "sys_platform == 'linux'" },
+]
+
+[[package]]
+name = "psycopg-binary"
+version = "3.3.4"
+source = { registry = "wheels" }
+wheels = [
+    { path = "psycopg_binary-3.3.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl" },
+    { path = "psycopg_binary-3.3.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl" },
+]
+
+[[package]]
+name = "psycopg-pool"
+version = "3.3.1"
+source = { registry = "wheels" }
+dependencies = [
+    { name = "typing-extensions", marker = "sys_platform == 'linux'" },
+]
+wheels = [
+    { path = "psycopg_pool-3.3.1-py3-none-any.whl" },
+    { path = "psycopg_pool-3.3.1-py3-none-any.whl" },
+]
+
+[[package]]
+name = "pyasn1"
+version = "0.6.3"
+source = { registry = "wheels" }
+wheels = [
+    { path = "pyasn1-0.6.3-py3-none-any.whl" },
+    { path = "pyasn1-0.6.3-py3-none-any.whl" },
+]
+
+[[package]]
+name = "pyasn1-modules"
+version = "0.4.2"
+source = { registry = "wheels" }
+dependencies = [
+    { name = "pyasn1", marker = "sys_platform == 'linux'" },
+]
+wheels = [
+    { path = "pyasn1_modules-0.4.2-py3-none-any.whl" },
+    { path = "pyasn1_modules-0.4.2-py3-none-any.whl" },
+]
+
+[[package]]
+name = "pycparser"
+version = "3.0"
+source = { registry = "wheels" }
+wheels = [
+    { path = "pycparser-3.0-py3-none-any.whl" },
+    { path = "pycparser-3.0-py3-none-any.whl" },
+]
+
+[[package]]
+name = "pydantic"
+version = "2.13.4"
+source = { registry = "wheels" }
+dependencies = [
+    { name = "annotated-types", marker = "sys_platform == 'linux'" },
+    { name = "pydantic-core", marker = "sys_platform == 'linux'" },
+    { name = "typing-extensions", marker = "sys_platform == 'linux'" },
+    { name = "typing-inspection", marker = "sys_platform == 'linux'" },
+]
+wheels = [
+    { path = "pydantic-2.13.4-py3-none-any.whl" },
+    { path = "pydantic-2.13.4-py3-none-any.whl" },
+]
+
+[[package]]
+name = "pydantic-core"
+version = "2.46.4"
+source = { registry = "wheels" }
+dependencies = [
+    { name = "typing-extensions", marker = "sys_platform == 'linux'" },
+]
+wheels = [
+    { path = "pydantic_core-2.46.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl" },
+    { path = "pydantic_core-2.46.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl" },
+]
+
+[[package]]
+name = "python-multipart"
+version = "0.0.32"
+source = { registry = "wheels" }
+wheels = [
+    { path = "python_multipart-0.0.32-py3-none-any.whl" },
+    { path = "python_multipart-0.0.32-py3-none-any.whl" },
+]
+
+[[package]]
+name = "requests"
+version = "2.34.2"
+source = { registry = "wheels" }
+dependencies = [
+    { name = "certifi", marker = "sys_platform == 'linux'" },
+    { name = "charset-normalizer", marker = "sys_platform == 'linux'" },
+    { name = "idna", marker = "sys_platform == 'linux'" },
+    { name = "urllib3", marker = "sys_platform == 'linux'" },
+]
+wheels = [
+    { path = "requests-2.34.2-py3-none-any.whl" },
+    { path = "requests-2.34.2-py3-none-any.whl" },
+]
+
+[[package]]
+name = "starlette"
+version = "1.3.1"
+source = { registry = "wheels" }
+dependencies = [
+    { name = "anyio", marker = "sys_platform == 'linux'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13' and sys_platform == 'linux'" },
+]
+wheels = [
+    { path = "starlette-1.3.1-py3-none-any.whl" },
+    { path = "starlette-1.3.1-py3-none-any.whl" },
+]
+
+[[package]]
+name = "typing-extensions"
+version = "4.15.0"
+source = { registry = "wheels" }
+wheels = [
+    { path = "typing_extensions-4.15.0-py3-none-any.whl" },
+    { path = "typing_extensions-4.15.0-py3-none-any.whl" },
+]
+
+[[package]]
+name = "typing-inspection"
+version = "0.4.2"
+source = { registry = "wheels" }
+dependencies = [
+    { name = "typing-extensions", marker = "sys_platform == 'linux'" },
+]
+wheels = [
+    { path = "typing_inspection-0.4.2-py3-none-any.whl" },
+    { path = "typing_inspection-0.4.2-py3-none-any.whl" },
+]
+
+[[package]]
+name = "urllib3"
+version = "2.7.0"
+source = { registry = "wheels" }
+wheels = [
+    { path = "urllib3-2.7.0-py3-none-any.whl" },
+    { path = "urllib3-2.7.0-py3-none-any.whl" },
+]
+
+[[package]]
+name = "uvicorn"
+version = "0.49.0"
+source = { registry = "wheels" }
+dependencies = [
+    { name = "click", marker = "sys_platform == 'linux'" },
+    { name = "h11", marker = "sys_platform == 'linux'" },
+]
+wheels = [
+    { path = "uvicorn-0.49.0-py3-none-any.whl" },
+    { path = "uvicorn-0.49.0-py3-none-any.whl" },
+]
