@@ -272,13 +272,6 @@ export default function App() {
 
   useEffect(() => { refreshAll(); }, [refreshAll]);
 
-  // Demo reset: rotate to the next reconciliation scenario, then reload every
-  // page's data via refreshAll (which also bumps refreshKey).
-  const resetDemo = useCallback(async () => {
-    await api.demoReset();
-    await refreshAll();
-  }, [refreshAll]);
-
   // Guard: never render a page the current persona can't see.
   const page: PageId = visiblePages.includes(activePage)
     ? activePage
@@ -307,7 +300,6 @@ export default function App() {
               status={status} summary={summary}
               org={org} scope={scope} onScope={changeScope} onNavigate={navigate}
               period={period || activeClose} periods={periods} onPeriod={changePeriod}
-              onReset={resetDemo}
               layoutMode={layout} />
       <div className="flex-1 min-w-0 flex flex-col">
         <motion.main

@@ -150,7 +150,7 @@ uv run scripts/setup.py --profile <p> --teardown                                
   one yourself. Check it with `databricks current-user me --profile <p>`; if it
   is missing or expired, the user runs `databricks auth login --host <url>
   --profile <p>`.
-- **Ask the user which company the demo is for** before the first install, and
+- **Ask the user for their company's name** before the first install, and
   pass it as `--company`; never choose one. Setup cannot prompt when it runs
   non-interactively (as under an agent), so it stops and asks for `--company`
   instead. It saves the name in `variable-overrides.json`, so later runs reuse it.

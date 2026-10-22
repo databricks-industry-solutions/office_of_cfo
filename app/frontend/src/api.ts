@@ -1861,9 +1861,6 @@ export const api = {
     post<CompareResult>("/scenario/compare", { ids }),
   scenarioBridge: (body: { scenario_id?: string; assumptions?: Record<string, number>; target?: string }) =>
     post<BridgeResult>("/scenario/bridge", body),
-
-  demoReset: () => post<{ reset: boolean; scenario: string; index: number;
-    open_breaks: { code: string; bu: string; amount: number }[] }>("/demo/reset"),
 };
 
 export const fmt = (v: string | number | null | undefined) => {

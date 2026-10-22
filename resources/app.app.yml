@@ -45,7 +45,7 @@ resources:
           # Contact address in the User-Agent; SEC filings lookups are refused without one.
           - name: CFO_CONTACT_EMAIL
             value: "${var.contact_email}"
-          # The company the demo is for: top-bar name and the peers benchmarking suggests.
+          # The user's company: top-bar name and the peers benchmarking suggests.
           - name: CFO_COMPANY_NAME
             value: "${var.company_name}"
           # Installed industries; the industry switcher lists only these.

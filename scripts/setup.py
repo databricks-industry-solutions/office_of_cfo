@@ -11,11 +11,11 @@
 #   "reportlab",
 # ]
 # ///
-"""Install the Office of the CFO demo into a Databricks workspace, end to end.
+"""Install the Office of the CFO solution into a Databricks workspace, end to end.
 
     uv run scripts/setup.py --profile <cli-profile> --company "<company>" [--var catalog=<catalog>] ...
 
---company names the company the demo is for: the app shows it in the top bar, and
+--company is your company's name: the app shows it in the top bar, and
 competitor benchmarking asks the model for its listed peers. Setup asks for it
 when it is not given. --industries (comma-separated, default all five) limits the
 install to some industries; the app then lists only those. Both are remembered
@@ -31,7 +31,7 @@ Every step is idempotent. If one fails, fix the cause and resume from it with
   pipeline    run the Lakeflow close pipeline (baseline_close, baseline_ops)
   baseline    build the baseline serving views, close support and governance
   industries  clone + relabel the baseline into the five industries (+ AI ROI)
-  grants      give the app's service principal access to the demo schemas
+  grants      give the app's service principal access to the solution's schemas
   genie       create and curate the Genie spaces (self-service + AI ROI)
   dashboards  publish the AI ROI dashboard for each industry
   app         hand the Genie/dashboard ids to the app, redeploy and start it
@@ -75,7 +75,7 @@ class Setup:
         self.company = ""
         self.industries: tuple[str, ...] = INDUSTRIES
 
-    # --- the company the demo is for ----------------------------------------
+    # --- the company the app is set up for ----------------------------------
     def saved_overrides(self) -> dict:
         return json.loads(self.overrides_file.read_text()) if self.overrides_file.exists() else {}
 
@@ -92,8 +92,8 @@ class Setup:
         name = given or from_var or self.saved_overrides().get("company_name") or ""
         if not name.strip() and ask:
             if not sys.stdin.isatty():
-                raise SystemExit('Which company is this demo for? Re-run with --company "<company name>".')
-            name = input("Which company is this demo for? (e.g. the customer you are presenting to): ")
+                raise SystemExit('No company name given. Re-run with --company "<company name>".')
+            name = input("Your company name (shown in the app; benchmarking suggests its listed peers): ")
         name = " ".join(name.split())[:120]
         if len(name) < 2 and ask:
             raise SystemExit('A company name is required: --company "<company name>".')
@@ -271,7 +271,7 @@ class Setup:
         # refuse it and only accept CREATE CATALOG in SQL, so fall back to running
         # that on a warehouse the user already has.
         try:
-            self.w.catalogs.create(name=self.catalog, comment="Office of the CFO demo (scripts/setup.py)")
+            self.w.catalogs.create(name=self.catalog, comment="Office of the CFO (scripts/setup.py)")
             print(f"Created catalog {self.catalog}.")
             return
         except DatabricksError as e:
@@ -281,7 +281,7 @@ class Setup:
             raise SystemExit(self._catalog_help(api_error))
         try:
             self.sql(f"CREATE CATALOG IF NOT EXISTS `{self.catalog}` "
-                     "COMMENT 'Office of the CFO demo (scripts/setup.py)'", warehouse_id=warehouse)
+                     "COMMENT 'Office of the CFO (scripts/setup.py)'", warehouse_id=warehouse)
             print(f"Created catalog {self.catalog}.")
         except RuntimeError as e:
             raise SystemExit(self._catalog_help(e))
@@ -448,7 +448,7 @@ class Setup:
     def teardown(self, assume_yes: bool) -> None:
         catalog = self.catalog
         print(f"This deletes the app {self.app_name}, its Lakebase project and warehouse, the "
-              f"Genie spaces and dashboards created by setup, and every demo schema in "
+              f"Genie spaces and dashboards created by setup, and every schema setup created in "
               f"catalog {catalog} (baseline_* and <industry>_*). The catalog itself is kept.")
         if not assume_yes and input("Type 'delete' to continue: ").strip() != "delete":
             raise SystemExit("Aborted.")
@@ -478,7 +478,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--profile", help="Databricks CLI profile (default: DATABRICKS_CONFIG_PROFILE / DEFAULT)")
     parser.add_argument("--target", "-t", default="default", help="bundle target (default: default)")
-    parser.add_argument("--company", help="the company the demo is for (asked when not given; remembered)")
+    parser.add_argument("--company", help="your company's name (asked when not given; remembered)")
     parser.add_argument("--industries", metavar="A,B",
                         help=f"comma-separated industries to install (default: all of {','.join(INDUSTRIES)}; remembered)")
     parser.add_argument("--var", action="append", metavar="NAME=VALUE",

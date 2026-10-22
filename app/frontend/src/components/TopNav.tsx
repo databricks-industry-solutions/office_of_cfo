@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Settings as SettingsIcon, Search, ChevronDown, Check, Sun, Moon, RefreshCw,
+  Settings as SettingsIcon, Search, ChevronDown, Check, Sun, Moon,
 } from "lucide-react";
 import { useTheme } from "../lib/theme";
 import {
@@ -32,26 +32,6 @@ function ThemeToggle() {
       className="p-1.5 rounded-lg transition ring-1 text-fg-muted ring-line hover:bg-black/[0.04] hover:text-fg"
     >
       {isDark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
-    </button>
-  );
-}
-
-/** Demo reset: rotate to the next reconciliation scenario. Spins while running. */
-function DemoResetButton({ onReset }: { onReset: () => Promise<void> }) {
-  const [resetting, setResetting] = useState(false);
-  return (
-    <button
-      onClick={async () => {
-        if (resetting) return;
-        setResetting(true);
-        try { await onReset(); } finally { setResetting(false); }
-      }}
-      disabled={resetting}
-      aria-label="Reset demo data"
-      title="Reset demo (rotate reconciliation scenario)"
-      className="p-1.5 rounded-lg transition ring-1 text-fg-muted ring-line hover:bg-black/[0.04] hover:text-fg disabled:opacity-50"
-    >
-      <RefreshCw className={cn("w-[18px] h-[18px]", resetting && "animate-spin")} />
     </button>
   );
 }
@@ -203,7 +183,7 @@ function PersonaMenu({
 
 export default function TopNav({
   activePage, onSelectPage, visiblePages, persona, personas, onSelectPersona, onOpenPalette,
-  status, summary, org, scope, onScope, period, periods, onPeriod, onNavigate, onReset,
+  status, summary, org, scope, onScope, period, periods, onPeriod, onNavigate,
   layoutMode = "wide",
 }: {
   activePage: PageId;
@@ -222,7 +202,6 @@ export default function TopNav({
   periods: PeriodInfo[];
   onPeriod: (p: string) => void;
   onNavigate: (p: PageId, query?: string) => void;
-  onReset: () => Promise<void>;
   layoutMode?: LayoutMode;
 }) {
   const { overlay } = useIndustry();
@@ -303,8 +282,6 @@ export default function TopNav({
           <ThemeToggle />
 
           <NotificationsBell status={status} summary={summary} onNavigate={onNavigate} />
-
-          <DemoResetButton onReset={onReset} />
 
           <PersonaMenu
             personas={personas}

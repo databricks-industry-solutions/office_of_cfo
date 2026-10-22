@@ -58,7 +58,7 @@ variables:
     default: consumer,software,fsi,energy,capmarkets
   company_name:
     description: >-
-      The company the demo is for. It names the app in the top bar, and
+      The user's company. It names the app in the top bar, and
       competitor benchmarking asks the model for this company's listed peers.
       No default: scripts/setup.py asks for it (or takes --company) and saves it.
   app_service_principal:
