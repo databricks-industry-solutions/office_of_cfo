@@ -411,7 +411,7 @@ indicative and may move.
 
 &copy; 2025 Databricks, Inc. All rights reserved. The source in this project is provided subject to the Databricks License [https://databricks.com/db-license-source]. All included or referenced third party libraries are subject to the licenses set forth below.
 
-Only dependencies that are **actually distributed** in the published app are listed — the built single-page frontend (`app/frontend/dist/`) and the offline Python wheelhouse (`app/wheels/`). Build- and test-only tooling (Vite, TypeScript, Vitest, Playwright, PostCSS, Autoprefixer) is not shipped and is not listed. Full per-package attribution (version, project URL, copyright) is in [`NOTICE.md`](NOTICE.md).
+Only dependencies that are **actually distributed** in the published app are listed — the single-page frontend (built from `app/frontend/` by the Databricks Apps runtime on deploy) and the offline Python wheelhouse (`app/wheels/`). Build- and test-only tooling (Vite, TypeScript, Vitest, Playwright, PostCSS, Autoprefixer) is not shipped and is not listed. Full per-package attribution (version, project URL, copyright) is in [`NOTICE.md`](NOTICE.md).
 
 | Package | License | Copyright |
 |---------|---------|-----------|
