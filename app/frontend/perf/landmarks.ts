@@ -81,6 +81,7 @@ export const LANDMARKS: Record<PageId, Landmark> = {
   "market-insights": { description: "Market Insights container mounted, content rendered, no skeletons" },
   "scenario-planning": { description: "Scenario Planning container mounted, projection rendered, no skeletons" },
   "cash-flow": { description: "Cash Flow container mounted, cash-flow statement rendered, no skeletons" },
+  "thirteen-week-cash": { description: "13-Week Cash container mounted, weekly grid rendered, no skeletons" },
   exposure: {
     description: "Concentration container mounted, force-graph canvas painted, no skeletons",
     extraSelector: `${MAIN_CONTENT} canvas`,

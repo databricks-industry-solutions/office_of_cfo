@@ -11,6 +11,7 @@ export type PageId =
   | "market-insights"
   | "scenario-planning"
   | "cash-flow"
+  | "thirteen-week-cash"
   | "exposure"
   | "inventory-exposure"
   | "close-support"
@@ -46,6 +47,7 @@ export const PAGES: PageDef[] = [
   { id: "market-insights", label: "Market Insights" },
   { id: "scenario-planning", label: "Scenario Planning" },
   { id: "cash-flow", label: "Cash Flow" },
+  { id: "thirteen-week-cash", label: "13-Week Cash" },
   { id: "exposure", label: "Concentration Risk" },
   { id: "inventory-exposure", label: "Inventory Exposure" },
   { id: "close-support", label: "Benchmarking" },
@@ -118,7 +120,7 @@ export const MODULE_GROUPS: Record<string, NavGroup[]> = {
   fpa: [
     { id: "fpa-overview", label: "Overview", pages: ["executive"] },
     { id: "fpa-planning", label: "Performance & Trends", pages: ["comparative-statements", "historical-insights", "adhoc-analysis", "payment-behavior"] },
-    { id: "fpa-risk", label: "Planning & Risk", pages: ["scenario-planning", "cash-flow", "market-insights", "exposure", "inventory-exposure", "stress-test"] },
+    { id: "fpa-risk", label: "Planning & Risk", pages: ["scenario-planning", "cash-flow", "thirteen-week-cash", "market-insights", "exposure", "inventory-exposure", "stress-test"] },
     { id: "fpa-benchmarking", label: "Competitors benchmarking", pages: ["close-support-2"] },
   ],
   "ai-roi": [

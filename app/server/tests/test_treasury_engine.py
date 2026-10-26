@@ -229,3 +229,17 @@ def test_get_inputs_assembles_run_rates_and_fpa(monkeypatch):
     assert [m["period"] for m in inp.fpa_months] == ["2026-07", "2026-08", "2026-09"]
     assert inp.fpa_months[0]["receipts"] == 990.0 and inp.fpa_months[0]["operating_payments"] == 590.0
     assert inp.min_cash == 700.0 and inp.revenue_source == "ai"
+
+
+# ---------------------------------------------------------------- route
+def test_route_display_dates_keep_weeks_seven_days_apart(monkeypatch):
+    from server.routes import treasury as route
+
+    monkeypatch.setattr(route, "get_inputs", lambda as_of, min_cash=None: _full_inputs())
+    monkeypatch.setattr(route, "month_offset", lambda: 4)
+    out = route.thirteen_week(as_of=None, min_cash=None)
+    assert out["display_as_of"] == "2026-10-31"            # close month-shifted Jun → Oct
+    starts = [date.fromisoformat(w["display_start"]) for w in out["weeks"]]
+    assert starts[0] == date(2026, 11, 1)
+    assert all((b - a).days == 7 for a, b in zip(starts, starts[1:]))
+    assert [m["display_period"] for m in out["reconciliation"]] == ["2026-11", "2026-12", "2027-01"]

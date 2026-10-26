@@ -16,6 +16,7 @@ export const PAGE_LAYOUT: Record<PageId, LayoutMode> = {
   approvals: "wide",
   "scenario-planning": "wide",
   "cash-flow": "full",
+  "thirteen-week-cash": "full",
   "market-insights": "wide",
   "stress-test": "wide",
   exposure: "full",

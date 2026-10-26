@@ -1282,6 +1282,62 @@ export interface ProjectResult {
   baseline_source?: "ai" | "budget" | "run_rate";
 }
 
+// ── 13-Week Cash (treasury, direct method) — GET /treasury/13w ──────────────
+// Dates are seed-calendar; the server adds `display_*` twins already shifted onto
+// the demo calendar, so the page reads those (the generic payload walker doesn't
+// know these keys).
+export type CashConfidence = "high" | "medium" | "low";
+export type CashRowMethod = "ai" | "rule" | "rolling" | "forecast";
+
+export interface TreasuryWeek {
+  index: number; start: string; end: string; display_start: string; display_end: string;
+}
+
+export interface TreasuryRow {
+  id: string; label: string; direction: "in" | "out"; method: CashRowMethod;
+  values: number[]; total: number;
+  /** AI rows only: amount-weighted confidence per week (null = no flows). */
+  confidence?: (CashConfidence | null)[];
+}
+
+export interface TreasuryItem {
+  ledger: "ar" | "ap"; invoice_id: string; counterparty: string; amount: number;
+  due_date: string; expected_date: string; display_due_date: string; display_expected_date: string;
+  week: number | null; confidence: CashConfidence; past_habit: boolean;
+}
+
+export interface TreasuryDriver {
+  ledger: "ar" | "ap"; counterparty: string; open_amount: number; terms: number;
+  invoices_settled: number; avg_days_vs_due: number; spread_days: number;
+  confidence: CashConfidence; explanation: string;
+}
+
+export interface TreasuryReconLine {
+  receipts: number; operating_payments: number; capex: number; net_change: number; ending_cash: number;
+}
+
+export interface TreasuryForecast {
+  as_of: string; display_as_of: string;
+  weeks: TreasuryWeek[];
+  rows: TreasuryRow[];
+  summary: {
+    opening_cash: number[]; inflows: number[]; outflows: number[]; net_flow: number[];
+    closing_cash: number[]; lowest_week: number; lowest_cash: number; min_cash: number | null;
+    beyond_horizon: { ar: number; ap: number };
+  };
+  items: TreasuryItem[];
+  drivers: TreasuryDriver[];
+  assumptions: {
+    receipts_lag_days: number; supplier_lag_days: number; supplier_monthly_run_rate: number;
+    other_weekly_run_rate: number; revenue_source: "ai" | "budget" | "run_rate";
+    rules: { row_id: string; label: string; monthly_amount: number; schedule: string; basis: string }[];
+  };
+  reconciliation: {
+    period: string; display_period: string;
+    treasury: TreasuryReconLine; fpa: TreasuryReconLine | null; difference: TreasuryReconLine | null;
+  }[];
+}
+
 export interface ScenarioPlan {
   scenario_id: string; name: string;
   status: "baseline" | "draft" | "committed" | "published" | "archived";
@@ -1836,6 +1892,7 @@ export const api = {
     get<TaskActivity[]>(`/close-tasks/${encodeURIComponent(id)}/activity`),
   closeActivity: () => get<TaskActivity[]>("/close-activity"),
 
+  treasury13w: () => get<TreasuryForecast>("/treasury/13w"),
   scenarioDrivers: () => get<{ drivers: DriverDef[] }>("/scenario/drivers"),
   scenarioProject: (assumptions: Record<string, number>, as_of?: string) =>
     post<ProjectResult>("/scenario/project", { assumptions, as_of }),

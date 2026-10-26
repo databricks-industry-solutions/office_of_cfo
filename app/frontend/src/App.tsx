@@ -20,6 +20,7 @@ import Approvals from "./pages/Approvals";
 import StressTest from "./pages/StressTest";
 import ScenarioPlanning from "./pages/ScenarioPlanning";
 import CashFlow from "./pages/CashFlow";
+import ThirteenWeekCash from "./pages/ThirteenWeekCash";
 import MarketInsights from "./pages/MarketInsights";
 import ExposureNetwork from "./pages/ExposureNetwork";
 import InventoryExposure from "./pages/InventoryExposure";
@@ -324,6 +325,7 @@ export default function App() {
           {page === "market-insights" && <MarketInsights refreshKey={refreshKey} onNavigate={navigate} />}
           {page === "scenario-planning" && <ScenarioPlanning refreshKey={refreshKey} persona={persona} />}
           {page === "cash-flow" && <CashFlow refreshKey={refreshKey} />}
+          {page === "thirteen-week-cash" && <ThirteenWeekCash refreshKey={refreshKey} />}
           {page === "exposure" && <ExposureNetwork persona={persona} onNavigate={navigate} refreshKey={refreshKey} />}
           {page === "inventory-exposure" && <InventoryExposure scope={scope} refreshKey={refreshKey} />}
           {page === "close-support" && <CloseSupport />}
