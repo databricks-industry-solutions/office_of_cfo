@@ -1,0 +1,27 @@
+# Optional: aggregates system.ai_gateway.usage into {catalog}.app_ops so the AI
+# ROI page can show this workspace's real AI Gateway spend next to the synthetic
+# data. Needs SELECT on the system.ai_gateway schema. Paused by default; unpause
+# it in the Jobs UI (or set pause_status: UNPAUSED) once that access is granted.
+resources:
+  jobs:
+    ai_roi_gateway_usage_refresh:
+      name: ${var.app_name}-ai-gateway-usage-refresh
+      description: Refreshes the privacy-safe shared AI Gateway daily aggregate.
+      schedule:
+        quartz_cron_expression: "0 20 2 * * ?"
+        timezone_id: UTC
+        pause_status: PAUSED
+      tasks:
+        - task_key: refresh_gateway_usage
+          spark_python_task:
+            python_file: ../pipelines/scripts/refresh_ai_gateway_usage.py
+            parameters:
+              - --catalog=${var.catalog}
+              - --grant-to=${var.app_service_principal}
+          environment_key: default
+          max_retries: 2
+          min_retry_interval_millis: 300000
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"

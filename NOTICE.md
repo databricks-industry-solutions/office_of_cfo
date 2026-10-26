@@ -6,9 +6,9 @@ By using this repository and the notebooks within, you consent to Databricks col
 Dependencies are grouped below by license. The full text of each license is available via the link in the section header.
 
 Scope: this file attributes the open-source dependencies that are actually
-distributed in the published Databricks App — the built single-page frontend
-(committed under `app/frontend/dist/`) and the offline Python wheelhouse
-(committed under `app/wheels/`, installed at deploy time). Build- and test-only
+distributed in the published Databricks App — the single-page frontend (built
+from `app/frontend/` by the Databricks Apps runtime on deploy) and the offline
+Python wheelhouse (committed under `app/wheels/`, installed at deploy time). Build- and test-only
 tooling (Vite, TypeScript, Vitest, Playwright, PostCSS, Autoprefixer, type
 stubs) is not shipped in either artifact and is therefore not listed. The
 authoritative, fully pinned lists are `app/uv.lock` and

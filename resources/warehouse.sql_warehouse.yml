@@ -1,0 +1,12 @@
+# Serverless SQL warehouse for the app, the setup scripts, Genie and dashboards.
+# Stops after 10 idle minutes, so an unused demo costs nothing between sessions.
+resources:
+  sql_warehouses:
+    cfo_warehouse:
+      name: ${var.app_name}-warehouse
+      cluster_size: Small
+      warehouse_type: PRO
+      enable_serverless_compute: true
+      auto_stop_mins: 10
+      min_num_clusters: 1
+      max_num_clusters: 1

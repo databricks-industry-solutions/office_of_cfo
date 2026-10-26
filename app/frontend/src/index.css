@@ -1,0 +1,421 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ---- Theme tokens -----------------------------------------------------
+     Surface (`ink`), text (`fg`) and hairline (`line`) tokens are driven by
+     these CSS variables so the whole app can swap between the light "Stride"
+     theme and a dark theme by toggling `.dark` on <html> (see lib/theme.ts).
+     Ink/fg are space-separated RGB channel triplets so Tailwind's
+     `<alpha-value>` opacity modifiers keep working. `.entrance` re-declares
+     the light tokens so the persona entrance stays light under `.dark`. */
+  :root,
+  .entrance {
+    --c-ink-900: 246 245 242; /* page canvas (warm off-white) */
+    --c-ink-800: 255 255 255; /* panels / cards / menus */
+    --c-ink-700: 239 237 233; /* subtle fills / hover chips */
+    --c-ink-600: 229 226 220;
+    --c-ink-500: 207 203 195;
+    --c-fg: 30 35 43;
+    --c-fg-muted: 90 97 108;
+    --c-fg-subtle: 139 144 154;
+    --c-line: rgba(23, 25, 32, 0.09);
+    --c-line-strong: rgba(23, 25, 32, 0.16);
+    --c-canvas: #f6f5f2;         /* html/body backdrop (overscroll) */
+    --c-grain: rgba(16, 18, 23, 0.022);
+    --c-tile-ring: rgba(16, 18, 23, 0.05);
+    --app-gutter: clamp(1rem, 2.25vw, 2.5rem);
+    --content-standard: 90rem;
+    --content-wide: 105rem;
+    --readable-line: 68ch;
+    --grid-gap: clamp(0.75rem, 1.2vw, 1.25rem);
+    --c-record-row-hover: 239 237 233;
+    --c-spend-area-brick: #EBD5D2;
+    --c-spend-area-green: #D0E4D8;
+    --c-spend-area-blue: #D2DCE8;
+    --c-spend-area-gold: #E8DFC8;
+    --c-spend-area-slate: #DDE3EA;
+    --c-spend-area-divider: #1E232B;
+    --c-efficiency-line: #0E8C7A;
+    color-scheme: light;
+  }
+
+  .dark {
+    --c-ink-900: 16 18 23;   /* deep warm charcoal canvas */
+    --c-ink-800: 25 28 34;   /* panels / cards / menus */
+    --c-ink-700: 36 40 48;   /* subtle fills / hover chips */
+    --c-ink-600: 50 55 64;
+    --c-ink-500: 78 85 96;
+    --c-fg: 232 234 239;
+    --c-fg-muted: 166 172 182;
+    --c-fg-subtle: 125 131 142;
+    --c-line: rgba(255, 255, 255, 0.12);
+    --c-line-strong: rgba(255, 255, 255, 0.20);
+    --c-canvas: #101217;
+    --c-grain: rgba(255, 255, 255, 0.02);
+    --c-tile-ring: rgba(255, 255, 255, 0.08);
+    --c-record-row-hover: 64 70 80;
+    --c-spend-area-brick: #6E4842;
+    --c-spend-area-green: #3D5A4A;
+    --c-spend-area-blue: #3D4F66;
+    --c-spend-area-gold: #5C5340;
+    --c-spend-area-slate: #4A5562;
+    --c-spend-area-divider: rgba(255, 255, 255, 0.22);
+    --c-efficiency-line: #1C9784;
+    color-scheme: dark;
+  }
+
+  html, body, #root {
+    height: 100%;
+  }
+  html, body { background: var(--c-canvas); }
+  body {
+    margin: 0;
+    @apply bg-ink-900 text-fg font-sans antialiased;
+    background-image: theme(backgroundImage.mesh);
+    /* NB: no `background-attachment: fixed` — combined with the glass panels'
+       `backdrop-blur`, Chrome mis-composites the fixed layer while scrolling and
+       flashes black bands over the canvas. A normally-attached background paints
+       cleanly across the full scroll height. */
+    text-rendering: optimizeLegibility;
+  }
+  /* Subtle grain overlay across the whole app */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image: radial-gradient(var(--c-grain) 1px, transparent 1px);
+    background-size: 3px 3px;
+    opacity: 0.5;
+  }
+  #root { position: relative; z-index: 1; }
+  ::selection { background: rgba(62, 71, 84, 0.16); }
+
+  /* Default border color so bare `border` / `border-b` utilities read as subtle
+     hairlines in either theme. */
+  *, ::before, ::after {
+    border-color: var(--c-line);
+  }
+
+  /* Visible keyboard focus. */
+  :where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid theme(colors.accent.DEFAULT);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+@layer utilities {
+  /* --- Dark-theme remaps for hardcoded neutral overlays ------------------
+     Much of the UI uses `bg-black/[0.0x]` (and hover variants) as subtle
+     fills/hovers that read correctly on the light canvas. On the dark canvas
+     those must invert to translucent white. Remapping the finite opacity set
+     here (higher specificity than the single-class utilities) keeps the
+     component markup untouched. Modal scrims use `bg-black/30`–`/40`
+     (non-bracket) and are intentionally left dark. */
+  .dark .bg-black\/\[0\.02\] { background-color: rgb(255 255 255 / 0.03); }
+  .dark .bg-black\/\[0\.03\] { background-color: rgb(255 255 255 / 0.04); }
+  .dark .bg-black\/\[0\.04\] { background-color: rgb(255 255 255 / 0.055); }
+  .dark .bg-black\/\[0\.05\] { background-color: rgb(255 255 255 / 0.065); }
+  .dark .bg-black\/\[0\.06\] { background-color: rgb(255 255 255 / 0.08); }
+  .dark .bg-black\/\[0\.08\] { background-color: rgb(255 255 255 / 0.10); }
+  .dark .bg-black\/\[0\.10\] { background-color: rgb(255 255 255 / 0.13); }
+
+  .dark .hover\:bg-black\/\[0\.03\]:hover { background-color: rgb(255 255 255 / 0.05); }
+  .dark .hover\:bg-black\/\[0\.04\]:hover { background-color: rgb(255 255 255 / 0.07); }
+  .dark .hover\:bg-black\/\[0\.05\]:hover { background-color: rgb(255 255 255 / 0.08); }
+  .dark .hover\:bg-black\/\[0\.06\]:hover { background-color: rgb(255 255 255 / 0.10); }
+  .dark .hover\:bg-black\/\[0\.08\]:hover { background-color: rgb(255 255 255 / 0.12); }
+  .dark .hover\:bg-black\/\[0\.10\]:hover { background-color: rgb(255 255 255 / 0.14); }
+
+  /* A couple of solid-white spots (segmented-control chips / sub-bar) need to
+     become raised dark surfaces. */
+  .dark .bg-white\/70 { background-color: rgb(var(--c-ink-800) / 0.7); }
+
+  /* --- SVG chart retargeting --------------------------------------------
+     The SVG charts (Executive / benchmark / burndown) set neutral fills and
+     grid strokes as presentation attributes. Author CSS `fill`/`stroke` wins
+     over presentation attributes, so we retarget the neutral hexes to theme
+     tokens in dark mode without editing the chart components. Data-series
+     colors (emerald/brick/blue/slate) are left untouched. */
+  .dark svg text[fill="#1E232B"],
+  .dark svg text[fill="#171920"] { fill: rgb(var(--c-fg)); }
+  .dark svg text[fill="#4B5058"] { fill: rgb(var(--c-fg-muted)); }
+  .dark svg text[fill="#8B909A"] { fill: rgb(var(--c-fg-subtle)); }
+  .dark svg line[stroke^="rgba(23,25,32"],
+  .dark svg rect[stroke^="rgba(23,25,32"],
+  .dark svg path[stroke^="rgba(23,25,32"] { stroke: rgba(255, 255, 255, 0.16); }
+}
+
+@layer utilities {
+  .tile {
+    @apply rounded-2xl bg-ink-800 shadow-tile transition-all duration-300;
+  }
+  /* The `shadow-tile` hairline ring is baked for the light base; refresh it so
+     tiles keep a crisp edge on the dark canvas. */
+  .dark .tile {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--c-tile-ring);
+  }
+  .tile-hover {
+    @apply hover:shadow-tile-hover hover:-translate-y-0.5;
+  }
+  .glass {
+    background: linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.6) 100%);
+    @apply backdrop-blur-md shadow-tile;
+  }
+  .dark .glass {
+    background: linear-gradient(180deg, rgb(var(--c-ink-800) / 0.85) 0%, rgb(var(--c-ink-800) / 0.6) 100%);
+  }
+  .num {
+    @apply font-mono tabular-nums tracking-tight;
+  }
+  .ai-roi-surface .num,
+  .ai-roi-surface .font-mono {
+    font-family: inherit;
+  }
+  /* Actual data/record rows (tables, league lists). Apply on <tr> / row shells. */
+  .record-row-hover {
+    @apply transition-colors;
+  }
+  .record-row-hover:hover,
+  .record-row-hover:focus-within {
+    background-color: rgb(var(--c-record-row-hover));
+  }
+  .grid-bento {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--grid-gap);
+  }
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--grid-gap);
+  }
+  .readable-copy {
+    max-width: var(--readable-line);
+  }
+  .skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -3.5rem;
+    z-index: 100;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    background: theme(colors.accent.DEFAULT);
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .skip-link:focus {
+    top: 0.75rem;
+    outline: 2px solid theme(colors.accent.DEFAULT);
+    outline-offset: 2px;
+  }
+  /* Loading placeholders: neutral block with a slow, soft highlight sweep. */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.375rem;
+    background-color: rgb(23 25 32 / 0.06);
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.55), transparent);
+    animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  }
+  .dark .skeleton { background-color: rgb(255 255 255 / 0.07); }
+  .dark .skeleton::after {
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.06), transparent);
+  }
+  .shimmer-text {
+    color: theme(colors.fg.DEFAULT);
+  }
+  .ambient-orb {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(80px);
+    pointer-events: none;
+  }
+  .scan {
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgba(23,25,32,0.02) 0px,
+      rgba(23,25,32,0.02) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  }
+  /* Exposure-network background grid (behind the force-graph canvas). */
+  .exposure-grid {
+    background-image:
+      linear-gradient(rgba(23, 25, 32, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(23, 25, 32, 0.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .dark .exposure-grid {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  }
+  .dark .scan {
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,0.03) 0px,
+      rgba(255,255,255,0.03) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  }
+  /* Three-dot "Genie is thinking" indicator. */
+  .genie-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .genie-dots i {
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background: theme(colors.fg.subtle);
+    animation: genie-bounce 1.2s ease-in-out infinite;
+  }
+  .genie-dots i:nth-child(2) { animation-delay: 0.15s; }
+  .genie-dots i:nth-child(3) { animation-delay: 0.3s; }
+}
+
+@keyframes genie-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* Persona entrance: self-contained light scene, independent of the saved app theme. */
+.entrance {
+  color-scheme: light;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 12% 4%, rgba(62, 71, 84, 0.07), transparent 44%),
+    radial-gradient(circle at 92% 0%, rgba(43, 76, 126, 0.10), transparent 42%),
+    #f6f5f2;
+}
+
+.entrance::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.24'/%3E%3C/svg%3E");
+}
+
+.entrance-signal-network {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.entrance-signal-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.entrance-wordmark {
+  left: 50%;
+  top: 5vh;
+  width: min(86vw, 22rem);
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.entrance-wordmark-office,
+.entrance-wordmark-of,
+.entrance-wordmark-cfo {
+  display: block;
+}
+
+.entrance-wordmark-office {
+  font-size: clamp(2.6rem, 8vw, 6.4rem);
+  font-weight: 500;
+  line-height: 0.92;
+  letter-spacing: -0.05em;
+}
+
+.entrance-wordmark-of {
+  margin-top: 0.55rem;
+  font-size: clamp(0.72rem, 1.35vw, 1.15rem);
+  font-weight: 500;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: rgb(var(--c-fg-muted));
+}
+
+.entrance-wordmark-cfo {
+  margin-top: 0.15rem;
+  font-size: clamp(3.2rem, 10.5vw, 8.6rem);
+  font-weight: 500;
+  line-height: 0.86;
+  letter-spacing: -0.06em;
+  color: #2b4c7e;
+}
+
+@media (min-width: 640px) {
+  .entrance-wordmark {
+    left: auto;
+    right: 14vw;
+    top: 5.5vh;
+    width: max-content;
+    transform: none;
+    text-align: right;
+  }
+
+  .entrance-wordmark-of {
+    text-align: left;
+  }
+}
+
+.entrance-card {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.86));
+  box-shadow:
+    0 1px 2px rgba(16, 18, 23, 0.04),
+    0 24px 80px -42px rgba(62, 71, 84, 0.22);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+@keyframes skeleton-shimmer {
+  to { transform: translateX(100%); }
+}
+
+/* Genie slide-over enters from the right edge. */
+@keyframes slidein {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* Genie backdrop fades in behind the slide-over. */
+@keyframes fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 39.99rem) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

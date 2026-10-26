@@ -1,0 +1,23 @@
+# Lakeflow pipeline that builds the governed close and data-quality layer for the
+# baseline company ({catalog}.baseline_close / baseline_ops). scripts/setup.py
+# runs it once, after the raw data is loaded and before the industries are seeded.
+resources:
+  pipelines:
+    close_pipeline:
+      name: "[${bundle.target}] Office of the CFO — Self-Healing Close"
+      catalog: ${var.catalog}
+      schema: baseline_close
+      serverless: true
+      channel: PREVIEW
+      continuous: false
+      libraries:
+        - glob:
+            include: ../pipelines/src/transformations/**
+      configuration:
+        catalog: ${var.catalog}
+        raw_schema: baseline_raw
+        close_schema: baseline_close
+        ops_schema: baseline_ops
+        close_folder_path: /Volumes/${var.catalog}/baseline_raw/close_folder
+        schema_location_base: /Volumes/${var.catalog}/baseline_ops/pipeline_metadata/schemas
+        close_period: ${var.close_period}

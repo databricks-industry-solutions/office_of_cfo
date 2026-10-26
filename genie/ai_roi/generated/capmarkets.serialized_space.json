@@ -1,0 +1,850 @@
+{
+  "version": 2,
+  "config": {
+    "sample_questions": [
+      {
+        "id": "8b91667d372f5855923bbf2132a4e6e4",
+        "question": [
+          "Which business units return less than they cost?"
+        ]
+      },
+      {
+        "id": "d1e91f2feea85353a9d36ae826425ea7",
+        "question": [
+          "Compare all-confidence and proven-only profitability by business unit."
+        ]
+      },
+      {
+        "id": "8f3f6bb81b105d8dbcee765f3ae9c1fc",
+        "question": [
+          "Show the monthly unit economics trend."
+        ]
+      },
+      {
+        "id": "2606f38e04f457ea94996cc122f19d96",
+        "question": [
+          "Which use cases are closest to break-even?"
+        ]
+      },
+      {
+        "id": "f714b09d07845f9786a0304e30446dd7",
+        "question": [
+          "What is programme-to-date net value and profitability?"
+        ]
+      },
+      {
+        "id": "34c2ee4feaef5aa2b187aa733656fc61",
+        "question": [
+          "What is net value by business unit?"
+        ]
+      },
+      {
+        "id": "76944d7850fd5d518d13c651caee7f78",
+        "question": [
+          "Which markets have the highest revenue per million tokens?"
+        ]
+      },
+      {
+        "id": "5d6501526bdf5875b54f3c09d7538c6f",
+        "question": [
+          "Filter fully loaded cost per million tokens by model."
+        ]
+      },
+      {
+        "id": "d9b968372b3858159d5ec94caf4925f0",
+        "question": [
+          "If cost is ambiguous, what should I clarify before analysing it?"
+        ]
+      }
+    ]
+  },
+  "data_sources": {
+    "metric_views": [
+      {
+        "identifier": "office_of_cfo.capmarkets_serving.mv_ai_roi",
+        "description": [
+          "Governed AI ROI semantic layer for capmarkets. Every measure must be read with MEASURE(). Profitability Index is a gross ratio with break-even at 1.0."
+        ],
+        "column_configs": [
+          {
+            "column_name": "Business Unit",
+            "description": [
+              "Stable business-unit key. Resolve it to dim_org_unit.name after aggregating the metric view."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Fully Loaded Cost",
+            "description": [
+              "Run cost plus amortised investment and allocated build cost; the profitability denominator."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Fully Loaded Cost per Mtok",
+            "description": [
+              "Fully loaded cost per million tokens."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Market",
+            "description": [
+              "Operating market or region on the fact grain."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Model",
+            "description": [
+              "Model key. Resolve it to dim_model.name after aggregating the metric view."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Month",
+            "description": [
+              "First day of the reporting month."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Net Value",
+            "description": [
+              "Realised value all minus fully loaded cost."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Profitability Index",
+            "description": [
+              "Gross ratio of all realised value to fully loaded cost. 1.0 is break-even; never a percentage."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Realised Value All",
+            "description": [
+              "Metered plus attested plus modelled value."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Realised Value Proven",
+            "description": [
+              "Metered plus attested value only; excludes modelled value."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Requests",
+            "description": [
+              "Request count."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Revenue per Mtok",
+            "description": [
+              "Realised value all per million tokens."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Token Cost per Mtok",
+            "description": [
+              "Token run cost per million tokens."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Token Run Cost",
+            "description": [
+              "Metered run cost only; excludes amortised and allocated build cost."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Total Tokens",
+            "description": [
+              "Billable tokens."
+            ],
+            "enable_format_assistance": true
+          }
+        ]
+      }
+    ],
+    "tables": [
+      {
+        "identifier": "office_of_cfo.capmarkets_serving.ai_roi_metric_registry",
+        "description": [
+          "Human-readable governed metric definitions and confidence scope."
+        ]
+      },
+      {
+        "identifier": "office_of_cfo.capmarkets_serving.dim_allocation_policy",
+        "description": [
+          "Signed-off shared-build-cost allocation policy, owner, basis and review dates."
+        ]
+      },
+      {
+        "identifier": "office_of_cfo.capmarkets_serving.dim_model",
+        "description": [
+          "Model names, tiers and reference cost per million tokens."
+        ]
+      },
+      {
+        "identifier": "office_of_cfo.capmarkets_serving.dim_org_unit",
+        "description": [
+          "Business-unit hierarchy and display names. Join only to an aggregated metric-view CTE on org_unit_bk."
+        ]
+      },
+      {
+        "identifier": "office_of_cfo.capmarkets_serving.dim_use_case",
+        "description": [
+          "Use-case names, market, confidence method and owner. Join only to an aggregated metric-view CTE on use_case_id."
+        ]
+      }
+    ]
+  },
+  "instructions": {
+    "text_instructions": [
+      {
+        "id": "64277fd9352850f481c43850a871be9a",
+        "content": [
+          "## PURPOSE\n",
+          "- Answer CFO and technology-finance questions about AI cost, realised value and profitability for the capmarkets business using office_of_cfo.capmarkets_serving.mv_ai_roi.\n",
+          "\n## REQUIRED SEMANTICS\n",
+          "- Read every metric-view measure with MEASURE(). Never SUM a measure and never put a measure in WHERE or GROUP BY.\n",
+          "- Never join the metric view directly. Aggregate it in a CTE with GROUP BY ALL, then join the CTE to a supporting dimension.\n",
+          "- Profitability Index is a GROSS RATIO: realised value divided by fully loaded cost. 1.0 is break-even. Never describe it as a percentage return, percentage, ROI percentage, or margin. If asked for a percentage return, correct the framing and report the index.\n",
+          "- All-confidence value includes metered, attested and modelled value. Proven value includes metered and attested value only. Always state which scope was used; never substitute one for the other.\n",
+          "- If the user says 'cost' without qualification, ask whether they mean Run Cost (metered operation only) or Fully Loaded Cost (run + amortised investment + allocated build). Do not silently choose.\n",
+          "- Revenue per million tokens divided by Fully Loaded Cost per million tokens equals Profitability Index.\n",
+          "- Cost is actual and is not confidence-graded. Confidence applies only to value. Label modelled value as an estimate.\n",
+          "\n## ANSWER STYLE\n",
+          "- Quote Profitability Index to three decimals and explicitly name 1.0 as break-even.\n",
+          "- Round USD to two decimals, state the date range, and name the business scope.\n",
+          "- Lead with the number, then explain the fully loaded cost and confidence drivers.\n"
+        ]
+      }
+    ],
+    "example_question_sqls": [
+      {
+        "id": "43ebb58ea03c5309adf3d65fcbbec430",
+        "question": [
+          "Compare all-confidence and proven-only profitability by business unit."
+        ],
+        "sql": [
+          "WITH roi AS (\n",
+          "  SELECT `Business Unit` AS business_unit,\n",
+          "         MEASURE(`Realised Value All`) AS realised_value_all,\n",
+          "         MEASURE(`Realised Value Proven`) AS realised_value_proven,\n",
+          "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost\n",
+          "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+          "  GROUP BY ALL\n",
+          ")\n",
+          "SELECT roi.business_unit,\n",
+          "       ROUND(roi.realised_value_all / NULLIF(roi.fully_loaded_cost, 0), 3) AS profitability_index_all,\n",
+          "       ROUND(roi.realised_value_proven / NULLIF(roi.fully_loaded_cost, 0), 3) AS profitability_index_proven,\n",
+          "       ROUND((roi.realised_value_all - roi.realised_value_proven)\n",
+          "             / NULLIF(roi.fully_loaded_cost, 0), 3) AS modelled_index_gap\n",
+          "FROM roi\n",
+          "ORDER BY profitability_index_all ASC"
+        ],
+        "usage_guidance": [
+          "All value includes modelled value; proven includes metered and attested value only. State both scopes."
+        ]
+      },
+      {
+        "id": "56c8dffa6c2252738c28a1d83856b64e",
+        "question": [
+          "Which use cases are closest to break-even?"
+        ],
+        "sql": [
+          "WITH roi AS (\n",
+          "  SELECT `Use Case` AS use_case,\n",
+          "         MEASURE(`Realised Value All`) AS realised_value_all,\n",
+          "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost,\n",
+          "         MEASURE(`Profitability Index`) AS profitability_index\n",
+          "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+          "  GROUP BY ALL\n",
+          ")\n",
+          "SELECT roi.use_case,\n",
+          "       ROUND(roi.realised_value_all, 2) AS realised_value_all_usd,\n",
+          "       ROUND(roi.fully_loaded_cost, 2) AS fully_loaded_cost_usd,\n",
+          "       ROUND(roi.profitability_index, 3) AS profitability_index,\n",
+          "       ROUND(ABS(roi.profitability_index - 1), 3) AS distance_from_break_even\n",
+          "FROM roi\n",
+          "ORDER BY distance_from_break_even ASC\n",
+          "LIMIT 10"
+        ],
+        "usage_guidance": [
+          "Rank by absolute distance from 1.0 after aggregating the metric view in a CTE."
+        ]
+      },
+      {
+        "id": "94dfb21a79e557fc8f750d89f4f49c05",
+        "question": [
+          "What is programme-to-date net value and profitability?"
+        ],
+        "sql": [
+          "SELECT ROUND(MEASURE(`Realised Value All`), 2) AS realised_value_all_usd,\n",
+          "       ROUND(MEASURE(`Realised Value Proven`), 2) AS realised_value_proven_usd,\n",
+          "       ROUND(MEASURE(`Fully Loaded Cost`), 2) AS fully_loaded_cost_usd,\n",
+          "       ROUND(MEASURE(`Realised Value All`) - MEASURE(`Fully Loaded Cost`), 2) AS net_value_usd,\n",
+          "       ROUND(MEASURE(`Profitability Index`), 3) AS profitability_index\n",
+          "FROM office_of_cfo.capmarkets_serving.mv_ai_roi"
+        ],
+        "usage_guidance": [
+          "Programme-to-date summary from governed measures; profitability is a ratio, not a percentage."
+        ]
+      },
+      {
+        "id": "9d7de04435715cfd8df606b143b500c8",
+        "question": [
+          "Show the monthly unit economics trend."
+        ],
+        "sql": [
+          "WITH monthly AS (\n",
+          "  SELECT `Month` AS month,\n",
+          "         MEASURE(`Total Tokens`) AS tokens,\n",
+          "         MEASURE(`Token Run Cost`) AS run_cost,\n",
+          "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost,\n",
+          "         MEASURE(`Realised Value All`) AS realised_value_all\n",
+          "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+          "  GROUP BY ALL\n",
+          ")\n",
+          "SELECT month,\n",
+          "       ROUND(realised_value_all / NULLIF(tokens / 1000000.0, 0), 2) AS revenue_per_mtok_usd,\n",
+          "       ROUND(fully_loaded_cost / NULLIF(tokens / 1000000.0, 0), 2) AS fully_loaded_cost_per_mtok_usd,\n",
+          "       ROUND(run_cost / NULLIF(tokens / 1000000.0, 0), 2) AS run_cost_per_mtok_usd,\n",
+          "       ROUND(realised_value_all / NULLIF(fully_loaded_cost, 0), 3) AS profitability_index\n",
+          "FROM monthly\n",
+          "ORDER BY month"
+        ],
+        "usage_guidance": [
+          "All measures use MEASURE(). Revenue per Mtok divided by loaded cost per Mtok is the profitability index."
+        ]
+      },
+      {
+        "id": "a9e0853567b35e378e21b4eaedc59da1",
+        "question": [
+          "Which markets have the highest revenue per million tokens?"
+        ],
+        "sql": [
+          "WITH roi AS (\n",
+          "  SELECT `Market` AS market,\n",
+          "         MEASURE(`Revenue per Mtok`) AS revenue_per_mtok,\n",
+          "         MEASURE(`Fully Loaded Cost per Mtok`) AS fully_loaded_cost_per_mtok\n",
+          "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+          "  GROUP BY ALL\n",
+          ")\n",
+          "SELECT roi.market,\n",
+          "       ROUND(roi.revenue_per_mtok, 2) AS revenue_per_mtok_usd,\n",
+          "       ROUND(roi.fully_loaded_cost_per_mtok, 2) AS fully_loaded_cost_per_mtok_usd\n",
+          "FROM roi\n",
+          "ORDER BY revenue_per_mtok DESC"
+        ],
+        "usage_guidance": [
+          "Unit economics from governed per-Mtok measures."
+        ]
+      },
+      {
+        "id": "b1bdfef0f0795930883ca61836702c23",
+        "question": [
+          "What is net value by business unit?"
+        ],
+        "sql": [
+          "WITH roi AS (\n",
+          "  SELECT `Business Unit` AS business_unit,\n",
+          "         MEASURE(`Net Value`) AS net_value,\n",
+          "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost\n",
+          "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+          "  GROUP BY ALL\n",
+          ")\n",
+          "SELECT roi.business_unit,\n",
+          "       ROUND(roi.net_value, 2) AS net_value_usd,\n",
+          "       ROUND(roi.fully_loaded_cost, 2) AS fully_loaded_cost_usd\n",
+          "FROM roi\n",
+          "ORDER BY net_value ASC"
+        ],
+        "usage_guidance": [
+          "Net Value is realised value minus fully loaded cost."
+        ]
+      },
+      {
+        "id": "b24d325caf5b5c138c842b18a16b3659",
+        "question": [
+          "Which business units return less than they cost?"
+        ],
+        "sql": [
+          "WITH roi AS (\n",
+          "  SELECT `Business Unit` AS business_unit,\n",
+          "         MEASURE(`Realised Value All`) AS realised_value_all,\n",
+          "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost,\n",
+          "         MEASURE(`Profitability Index`) AS profitability_index\n",
+          "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+          "  GROUP BY ALL\n",
+          ")\n",
+          "SELECT roi.business_unit,\n",
+          "       ROUND(roi.realised_value_all, 2) AS realised_value_all_usd,\n",
+          "       ROUND(roi.fully_loaded_cost, 2) AS fully_loaded_cost_usd,\n",
+          "       ROUND(roi.profitability_index, 3) AS profitability_index,\n",
+          "       CASE WHEN roi.profitability_index < 1 THEN 'below break-even'\n",
+          "            ELSE 'at or above break-even' END AS break_even_status\n",
+          "FROM roi\n",
+          "ORDER BY profitability_index ASC"
+        ],
+        "usage_guidance": [
+          "Profitability Index is a gross ratio. The CTE makes the break-even filter and ranking safe."
+        ]
+      },
+      {
+        "id": "c974031da3c855d486a702736e57ab72",
+        "question": [
+          "Filter fully loaded cost per million tokens by model."
+        ],
+        "sql": [
+          "WITH roi AS (\n",
+          "  SELECT `Model` AS model,\n",
+          "         MEASURE(`Fully Loaded Cost per Mtok`) AS fully_loaded_cost_per_mtok,\n",
+          "         MEASURE(`Token Cost per Mtok`) AS token_cost_per_mtok\n",
+          "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+          "  GROUP BY ALL\n",
+          ")\n",
+          "SELECT roi.model,\n",
+          "       ROUND(roi.fully_loaded_cost_per_mtok, 2) AS fully_loaded_cost_per_mtok_usd,\n",
+          "       ROUND(roi.token_cost_per_mtok, 2) AS token_cost_per_mtok_usd\n",
+          "FROM roi\n",
+          "ORDER BY fully_loaded_cost_per_mtok ASC"
+        ],
+        "usage_guidance": [
+          "Model-level unit cost uses MEASURE() on the metric view."
+        ]
+      }
+    ]
+  },
+  "benchmarks": {
+    "questions": [
+      {
+        "id": "039084dbdce95961aed0fb445b5948b4",
+        "question": [
+          "What is net value by business unit?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Business Unit` AS business_unit,\n",
+              "         MEASURE(`Net Value`) AS net_value,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost\n",
+              "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.business_unit,\n",
+              "       ROUND(roi.net_value, 2) AS net_value_usd,\n",
+              "       ROUND(roi.fully_loaded_cost, 2) AS fully_loaded_cost_usd\n",
+              "FROM roi\n",
+              "ORDER BY net_value ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "0bc5468721cb57efb842e07aafa15f15",
+        "question": [
+          "For capmarkets, what is programme-to-date net value and profitability?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT ROUND(MEASURE(`Realised Value All`), 2) AS realised_value_all_usd,\n",
+              "       ROUND(MEASURE(`Realised Value Proven`), 2) AS realised_value_proven_usd,\n",
+              "       ROUND(MEASURE(`Fully Loaded Cost`), 2) AS fully_loaded_cost_usd,\n",
+              "       ROUND(MEASURE(`Realised Value All`) - MEASURE(`Fully Loaded Cost`), 2) AS net_value_usd,\n",
+              "       ROUND(MEASURE(`Profitability Index`), 3) AS profitability_index\n",
+              "FROM office_of_cfo.capmarkets_serving.mv_ai_roi"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "0ce79bf57098589ab0df82c2295d28db",
+        "question": [
+          "Which markets have the highest revenue per million tokens?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Market` AS market,\n",
+              "         MEASURE(`Revenue per Mtok`) AS revenue_per_mtok,\n",
+              "         MEASURE(`Fully Loaded Cost per Mtok`) AS fully_loaded_cost_per_mtok\n",
+              "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.market,\n",
+              "       ROUND(roi.revenue_per_mtok, 2) AS revenue_per_mtok_usd,\n",
+              "       ROUND(roi.fully_loaded_cost_per_mtok, 2) AS fully_loaded_cost_per_mtok_usd\n",
+              "FROM roi\n",
+              "ORDER BY revenue_per_mtok DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "291b78cfca8d5f3a9a25db71b87415cd",
+        "question": [
+          "What is programme-to-date net value and profitability?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT ROUND(MEASURE(`Realised Value All`), 2) AS realised_value_all_usd,\n",
+              "       ROUND(MEASURE(`Realised Value Proven`), 2) AS realised_value_proven_usd,\n",
+              "       ROUND(MEASURE(`Fully Loaded Cost`), 2) AS fully_loaded_cost_usd,\n",
+              "       ROUND(MEASURE(`Realised Value All`) - MEASURE(`Fully Loaded Cost`), 2) AS net_value_usd,\n",
+              "       ROUND(MEASURE(`Profitability Index`), 3) AS profitability_index\n",
+              "FROM office_of_cfo.capmarkets_serving.mv_ai_roi"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2b4b17ea8a7f573586a086c6d4783c22",
+        "question": [
+          "Filter fully loaded cost per million tokens by model."
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Model` AS model,\n",
+              "         MEASURE(`Fully Loaded Cost per Mtok`) AS fully_loaded_cost_per_mtok,\n",
+              "         MEASURE(`Token Cost per Mtok`) AS token_cost_per_mtok\n",
+              "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.model,\n",
+              "       ROUND(roi.fully_loaded_cost_per_mtok, 2) AS fully_loaded_cost_per_mtok_usd,\n",
+              "       ROUND(roi.token_cost_per_mtok, 2) AS token_cost_per_mtok_usd\n",
+              "FROM roi\n",
+              "ORDER BY fully_loaded_cost_per_mtok ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "5b4d91bfd0595d80969ddadf0cc101b5",
+        "question": [
+          "For capmarkets, filter fully loaded cost per million tokens by model."
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Model` AS model,\n",
+              "         MEASURE(`Fully Loaded Cost per Mtok`) AS fully_loaded_cost_per_mtok,\n",
+              "         MEASURE(`Token Cost per Mtok`) AS token_cost_per_mtok\n",
+              "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.model,\n",
+              "       ROUND(roi.fully_loaded_cost_per_mtok, 2) AS fully_loaded_cost_per_mtok_usd,\n",
+              "       ROUND(roi.token_cost_per_mtok, 2) AS token_cost_per_mtok_usd\n",
+              "FROM roi\n",
+              "ORDER BY fully_loaded_cost_per_mtok ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "6067ae62bedd5c459297eea607beb67c",
+        "question": [
+          "For capmarkets, what is net value by business unit?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Business Unit` AS business_unit,\n",
+              "         MEASURE(`Net Value`) AS net_value,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost\n",
+              "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.business_unit,\n",
+              "       ROUND(roi.net_value, 2) AS net_value_usd,\n",
+              "       ROUND(roi.fully_loaded_cost, 2) AS fully_loaded_cost_usd\n",
+              "FROM roi\n",
+              "ORDER BY net_value ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "62c9aa1f2114545bb98f60633fcb1dbe",
+        "question": [
+          "Compare all-confidence and proven-only profitability by business unit."
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Business Unit` AS business_unit,\n",
+              "         MEASURE(`Realised Value All`) AS realised_value_all,\n",
+              "         MEASURE(`Realised Value Proven`) AS realised_value_proven,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost\n",
+              "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.business_unit,\n",
+              "       ROUND(roi.realised_value_all / NULLIF(roi.fully_loaded_cost, 0), 3) AS profitability_index_all,\n",
+              "       ROUND(roi.realised_value_proven / NULLIF(roi.fully_loaded_cost, 0), 3) AS profitability_index_proven,\n",
+              "       ROUND((roi.realised_value_all - roi.realised_value_proven)\n",
+              "             / NULLIF(roi.fully_loaded_cost, 0), 3) AS modelled_index_gap\n",
+              "FROM roi\n",
+              "ORDER BY profitability_index_all ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "6c7805fb6cef57cb85579c41882f8eb6",
+        "question": [
+          "For capmarkets, which markets have the highest revenue per million tokens?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Market` AS market,\n",
+              "         MEASURE(`Revenue per Mtok`) AS revenue_per_mtok,\n",
+              "         MEASURE(`Fully Loaded Cost per Mtok`) AS fully_loaded_cost_per_mtok\n",
+              "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.market,\n",
+              "       ROUND(roi.revenue_per_mtok, 2) AS revenue_per_mtok_usd,\n",
+              "       ROUND(roi.fully_loaded_cost_per_mtok, 2) AS fully_loaded_cost_per_mtok_usd\n",
+              "FROM roi\n",
+              "ORDER BY revenue_per_mtok DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "82dbe6c65d845411a7adc8337aefc85f",
+        "question": [
+          "For capmarkets, which use cases are closest to break-even?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Use Case` AS use_case,\n",
+              "         MEASURE(`Realised Value All`) AS realised_value_all,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost,\n",
+              "         MEASURE(`Profitability Index`) AS profitability_index\n",
+              "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.use_case,\n",
+              "       ROUND(roi.realised_value_all, 2) AS realised_value_all_usd,\n",
+              "       ROUND(roi.fully_loaded_cost, 2) AS fully_loaded_cost_usd,\n",
+              "       ROUND(roi.profitability_index, 3) AS profitability_index,\n",
+              "       ROUND(ABS(roi.profitability_index - 1), 3) AS distance_from_break_even\n",
+              "FROM roi\n",
+              "ORDER BY distance_from_break_even ASC\n",
+              "LIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "b1ceec74e9a85c34b5a0f9536ebd66b8",
+        "question": [
+          "For capmarkets, compare all-confidence and proven-only profitability by business unit."
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Business Unit` AS business_unit,\n",
+              "         MEASURE(`Realised Value All`) AS realised_value_all,\n",
+              "         MEASURE(`Realised Value Proven`) AS realised_value_proven,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost\n",
+              "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.business_unit,\n",
+              "       ROUND(roi.realised_value_all / NULLIF(roi.fully_loaded_cost, 0), 3) AS profitability_index_all,\n",
+              "       ROUND(roi.realised_value_proven / NULLIF(roi.fully_loaded_cost, 0), 3) AS profitability_index_proven,\n",
+              "       ROUND((roi.realised_value_all - roi.realised_value_proven)\n",
+              "             / NULLIF(roi.fully_loaded_cost, 0), 3) AS modelled_index_gap\n",
+              "FROM roi\n",
+              "ORDER BY profitability_index_all ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "c0d3fe82e3335f1aaacc7cd0d5ddb076",
+        "question": [
+          "Which use cases are closest to break-even?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Use Case` AS use_case,\n",
+              "         MEASURE(`Realised Value All`) AS realised_value_all,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost,\n",
+              "         MEASURE(`Profitability Index`) AS profitability_index\n",
+              "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.use_case,\n",
+              "       ROUND(roi.realised_value_all, 2) AS realised_value_all_usd,\n",
+              "       ROUND(roi.fully_loaded_cost, 2) AS fully_loaded_cost_usd,\n",
+              "       ROUND(roi.profitability_index, 3) AS profitability_index,\n",
+              "       ROUND(ABS(roi.profitability_index - 1), 3) AS distance_from_break_even\n",
+              "FROM roi\n",
+              "ORDER BY distance_from_break_even ASC\n",
+              "LIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "c1c8a3552ce85b8cad29b0c2e2b2fa31",
+        "question": [
+          "For capmarkets, which business units return less than they cost?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Business Unit` AS business_unit,\n",
+              "         MEASURE(`Realised Value All`) AS realised_value_all,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost,\n",
+              "         MEASURE(`Profitability Index`) AS profitability_index\n",
+              "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.business_unit,\n",
+              "       ROUND(roi.realised_value_all, 2) AS realised_value_all_usd,\n",
+              "       ROUND(roi.fully_loaded_cost, 2) AS fully_loaded_cost_usd,\n",
+              "       ROUND(roi.profitability_index, 3) AS profitability_index,\n",
+              "       CASE WHEN roi.profitability_index < 1 THEN 'below break-even'\n",
+              "            ELSE 'at or above break-even' END AS break_even_status\n",
+              "FROM roi\n",
+              "ORDER BY profitability_index ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "c97e01a3eb255881842d22ab93ee52a3",
+        "question": [
+          "For capmarkets, show the monthly unit economics trend."
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH monthly AS (\n",
+              "  SELECT `Month` AS month,\n",
+              "         MEASURE(`Total Tokens`) AS tokens,\n",
+              "         MEASURE(`Token Run Cost`) AS run_cost,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost,\n",
+              "         MEASURE(`Realised Value All`) AS realised_value_all\n",
+              "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT month,\n",
+              "       ROUND(realised_value_all / NULLIF(tokens / 1000000.0, 0), 2) AS revenue_per_mtok_usd,\n",
+              "       ROUND(fully_loaded_cost / NULLIF(tokens / 1000000.0, 0), 2) AS fully_loaded_cost_per_mtok_usd,\n",
+              "       ROUND(run_cost / NULLIF(tokens / 1000000.0, 0), 2) AS run_cost_per_mtok_usd,\n",
+              "       ROUND(realised_value_all / NULLIF(fully_loaded_cost, 0), 3) AS profitability_index\n",
+              "FROM monthly\n",
+              "ORDER BY month"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "de72c6734b885669b4158056c09c240f",
+        "question": [
+          "Which business units return less than they cost?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Business Unit` AS business_unit,\n",
+              "         MEASURE(`Realised Value All`) AS realised_value_all,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost,\n",
+              "         MEASURE(`Profitability Index`) AS profitability_index\n",
+              "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.business_unit,\n",
+              "       ROUND(roi.realised_value_all, 2) AS realised_value_all_usd,\n",
+              "       ROUND(roi.fully_loaded_cost, 2) AS fully_loaded_cost_usd,\n",
+              "       ROUND(roi.profitability_index, 3) AS profitability_index,\n",
+              "       CASE WHEN roi.profitability_index < 1 THEN 'below break-even'\n",
+              "            ELSE 'at or above break-even' END AS break_even_status\n",
+              "FROM roi\n",
+              "ORDER BY profitability_index ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "f3f0cc578a8650e6b45b1226ece3c78d",
+        "question": [
+          "Show the monthly unit economics trend."
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH monthly AS (\n",
+              "  SELECT `Month` AS month,\n",
+              "         MEASURE(`Total Tokens`) AS tokens,\n",
+              "         MEASURE(`Token Run Cost`) AS run_cost,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost,\n",
+              "         MEASURE(`Realised Value All`) AS realised_value_all\n",
+              "  FROM office_of_cfo.capmarkets_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT month,\n",
+              "       ROUND(realised_value_all / NULLIF(tokens / 1000000.0, 0), 2) AS revenue_per_mtok_usd,\n",
+              "       ROUND(fully_loaded_cost / NULLIF(tokens / 1000000.0, 0), 2) AS fully_loaded_cost_per_mtok_usd,\n",
+              "       ROUND(run_cost / NULLIF(tokens / 1000000.0, 0), 2) AS run_cost_per_mtok_usd,\n",
+              "       ROUND(realised_value_all / NULLIF(fully_loaded_cost, 0), 3) AS profitability_index\n",
+              "FROM monthly\n",
+              "ORDER BY month"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

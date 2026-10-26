@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.venv/
+.databricks/
+node_modules/
+.env
+frontend/node_modules/
+# frontend/dist and wheels/ are committed on purpose (uploaded via databricks sync
+# for the Apps deploy: built SPA + offline wheelhouse).

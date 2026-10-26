@@ -1,0 +1,850 @@
+{
+  "version": 2,
+  "config": {
+    "sample_questions": [
+      {
+        "id": "9c086048cbfb531bb4e6b5ba55ae6dc6",
+        "question": [
+          "Which business units return less than they cost?"
+        ]
+      },
+      {
+        "id": "afdd4a0a89865bb888fb78c5d4983b6c",
+        "question": [
+          "Compare all-confidence and proven-only profitability by business unit."
+        ]
+      },
+      {
+        "id": "6797b1c7cb69598b8213519ccb6c389e",
+        "question": [
+          "Show the monthly unit economics trend."
+        ]
+      },
+      {
+        "id": "e4c77dc198955861b1cf76a96368bb53",
+        "question": [
+          "Which use cases are closest to break-even?"
+        ]
+      },
+      {
+        "id": "e4d4a98755ce5fc1867511303cfec278",
+        "question": [
+          "What is programme-to-date net value and profitability?"
+        ]
+      },
+      {
+        "id": "d6dffb8f21c0566e905166e1381fb4d7",
+        "question": [
+          "What is net value by business unit?"
+        ]
+      },
+      {
+        "id": "ed50e4364195514fa809a1c3008a6812",
+        "question": [
+          "Which markets have the highest revenue per million tokens?"
+        ]
+      },
+      {
+        "id": "b5baca8ae006571491d11b6d1b268ab4",
+        "question": [
+          "Filter fully loaded cost per million tokens by model."
+        ]
+      },
+      {
+        "id": "1e1d82d434965b0fa7cb69af668d5bb5",
+        "question": [
+          "If cost is ambiguous, what should I clarify before analysing it?"
+        ]
+      }
+    ]
+  },
+  "data_sources": {
+    "metric_views": [
+      {
+        "identifier": "office_of_cfo.fsi_serving.mv_ai_roi",
+        "description": [
+          "Governed AI ROI semantic layer for fsi. Every measure must be read with MEASURE(). Profitability Index is a gross ratio with break-even at 1.0."
+        ],
+        "column_configs": [
+          {
+            "column_name": "Business Unit",
+            "description": [
+              "Stable business-unit key. Resolve it to dim_org_unit.name after aggregating the metric view."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Fully Loaded Cost",
+            "description": [
+              "Run cost plus amortised investment and allocated build cost; the profitability denominator."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Fully Loaded Cost per Mtok",
+            "description": [
+              "Fully loaded cost per million tokens."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Market",
+            "description": [
+              "Operating market or region on the fact grain."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Model",
+            "description": [
+              "Model key. Resolve it to dim_model.name after aggregating the metric view."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Month",
+            "description": [
+              "First day of the reporting month."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Net Value",
+            "description": [
+              "Realised value all minus fully loaded cost."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Profitability Index",
+            "description": [
+              "Gross ratio of all realised value to fully loaded cost. 1.0 is break-even; never a percentage."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Realised Value All",
+            "description": [
+              "Metered plus attested plus modelled value."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Realised Value Proven",
+            "description": [
+              "Metered plus attested value only; excludes modelled value."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Requests",
+            "description": [
+              "Request count."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Revenue per Mtok",
+            "description": [
+              "Realised value all per million tokens."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Token Cost per Mtok",
+            "description": [
+              "Token run cost per million tokens."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Token Run Cost",
+            "description": [
+              "Metered run cost only; excludes amortised and allocated build cost."
+            ],
+            "enable_format_assistance": true
+          },
+          {
+            "column_name": "Total Tokens",
+            "description": [
+              "Billable tokens."
+            ],
+            "enable_format_assistance": true
+          }
+        ]
+      }
+    ],
+    "tables": [
+      {
+        "identifier": "office_of_cfo.fsi_serving.ai_roi_metric_registry",
+        "description": [
+          "Human-readable governed metric definitions and confidence scope."
+        ]
+      },
+      {
+        "identifier": "office_of_cfo.fsi_serving.dim_allocation_policy",
+        "description": [
+          "Signed-off shared-build-cost allocation policy, owner, basis and review dates."
+        ]
+      },
+      {
+        "identifier": "office_of_cfo.fsi_serving.dim_model",
+        "description": [
+          "Model names, tiers and reference cost per million tokens."
+        ]
+      },
+      {
+        "identifier": "office_of_cfo.fsi_serving.dim_org_unit",
+        "description": [
+          "Business-unit hierarchy and display names. Join only to an aggregated metric-view CTE on org_unit_bk."
+        ]
+      },
+      {
+        "identifier": "office_of_cfo.fsi_serving.dim_use_case",
+        "description": [
+          "Use-case names, market, confidence method and owner. Join only to an aggregated metric-view CTE on use_case_id."
+        ]
+      }
+    ]
+  },
+  "instructions": {
+    "text_instructions": [
+      {
+        "id": "171077b1e30f5113ab8b9a8184ebbfc3",
+        "content": [
+          "## PURPOSE\n",
+          "- Answer CFO and technology-finance questions about AI cost, realised value and profitability for the fsi business using office_of_cfo.fsi_serving.mv_ai_roi.\n",
+          "\n## REQUIRED SEMANTICS\n",
+          "- Read every metric-view measure with MEASURE(). Never SUM a measure and never put a measure in WHERE or GROUP BY.\n",
+          "- Never join the metric view directly. Aggregate it in a CTE with GROUP BY ALL, then join the CTE to a supporting dimension.\n",
+          "- Profitability Index is a GROSS RATIO: realised value divided by fully loaded cost. 1.0 is break-even. Never describe it as a percentage return, percentage, ROI percentage, or margin. If asked for a percentage return, correct the framing and report the index.\n",
+          "- All-confidence value includes metered, attested and modelled value. Proven value includes metered and attested value only. Always state which scope was used; never substitute one for the other.\n",
+          "- If the user says 'cost' without qualification, ask whether they mean Run Cost (metered operation only) or Fully Loaded Cost (run + amortised investment + allocated build). Do not silently choose.\n",
+          "- Revenue per million tokens divided by Fully Loaded Cost per million tokens equals Profitability Index.\n",
+          "- Cost is actual and is not confidence-graded. Confidence applies only to value. Label modelled value as an estimate.\n",
+          "\n## ANSWER STYLE\n",
+          "- Quote Profitability Index to three decimals and explicitly name 1.0 as break-even.\n",
+          "- Round USD to two decimals, state the date range, and name the business scope.\n",
+          "- Lead with the number, then explain the fully loaded cost and confidence drivers.\n"
+        ]
+      }
+    ],
+    "example_question_sqls": [
+      {
+        "id": "0fce0d0d1de951c081f770bbff3c8022",
+        "question": [
+          "Which markets have the highest revenue per million tokens?"
+        ],
+        "sql": [
+          "WITH roi AS (\n",
+          "  SELECT `Market` AS market,\n",
+          "         MEASURE(`Revenue per Mtok`) AS revenue_per_mtok,\n",
+          "         MEASURE(`Fully Loaded Cost per Mtok`) AS fully_loaded_cost_per_mtok\n",
+          "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+          "  GROUP BY ALL\n",
+          ")\n",
+          "SELECT roi.market,\n",
+          "       ROUND(roi.revenue_per_mtok, 2) AS revenue_per_mtok_usd,\n",
+          "       ROUND(roi.fully_loaded_cost_per_mtok, 2) AS fully_loaded_cost_per_mtok_usd\n",
+          "FROM roi\n",
+          "ORDER BY revenue_per_mtok DESC"
+        ],
+        "usage_guidance": [
+          "Unit economics from governed per-Mtok measures."
+        ]
+      },
+      {
+        "id": "1f4053af39d155559ab8c427d82591e9",
+        "question": [
+          "Which business units return less than they cost?"
+        ],
+        "sql": [
+          "WITH roi AS (\n",
+          "  SELECT `Business Unit` AS business_unit,\n",
+          "         MEASURE(`Realised Value All`) AS realised_value_all,\n",
+          "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost,\n",
+          "         MEASURE(`Profitability Index`) AS profitability_index\n",
+          "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+          "  GROUP BY ALL\n",
+          ")\n",
+          "SELECT roi.business_unit,\n",
+          "       ROUND(roi.realised_value_all, 2) AS realised_value_all_usd,\n",
+          "       ROUND(roi.fully_loaded_cost, 2) AS fully_loaded_cost_usd,\n",
+          "       ROUND(roi.profitability_index, 3) AS profitability_index,\n",
+          "       CASE WHEN roi.profitability_index < 1 THEN 'below break-even'\n",
+          "            ELSE 'at or above break-even' END AS break_even_status\n",
+          "FROM roi\n",
+          "ORDER BY profitability_index ASC"
+        ],
+        "usage_guidance": [
+          "Profitability Index is a gross ratio. The CTE makes the break-even filter and ranking safe."
+        ]
+      },
+      {
+        "id": "22e8fb84adbe5574b28fab40c9055521",
+        "question": [
+          "What is net value by business unit?"
+        ],
+        "sql": [
+          "WITH roi AS (\n",
+          "  SELECT `Business Unit` AS business_unit,\n",
+          "         MEASURE(`Net Value`) AS net_value,\n",
+          "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost\n",
+          "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+          "  GROUP BY ALL\n",
+          ")\n",
+          "SELECT roi.business_unit,\n",
+          "       ROUND(roi.net_value, 2) AS net_value_usd,\n",
+          "       ROUND(roi.fully_loaded_cost, 2) AS fully_loaded_cost_usd\n",
+          "FROM roi\n",
+          "ORDER BY net_value ASC"
+        ],
+        "usage_guidance": [
+          "Net Value is realised value minus fully loaded cost."
+        ]
+      },
+      {
+        "id": "602cae3eb6ce5a31913480864c8350d7",
+        "question": [
+          "Show the monthly unit economics trend."
+        ],
+        "sql": [
+          "WITH monthly AS (\n",
+          "  SELECT `Month` AS month,\n",
+          "         MEASURE(`Total Tokens`) AS tokens,\n",
+          "         MEASURE(`Token Run Cost`) AS run_cost,\n",
+          "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost,\n",
+          "         MEASURE(`Realised Value All`) AS realised_value_all\n",
+          "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+          "  GROUP BY ALL\n",
+          ")\n",
+          "SELECT month,\n",
+          "       ROUND(realised_value_all / NULLIF(tokens / 1000000.0, 0), 2) AS revenue_per_mtok_usd,\n",
+          "       ROUND(fully_loaded_cost / NULLIF(tokens / 1000000.0, 0), 2) AS fully_loaded_cost_per_mtok_usd,\n",
+          "       ROUND(run_cost / NULLIF(tokens / 1000000.0, 0), 2) AS run_cost_per_mtok_usd,\n",
+          "       ROUND(realised_value_all / NULLIF(fully_loaded_cost, 0), 3) AS profitability_index\n",
+          "FROM monthly\n",
+          "ORDER BY month"
+        ],
+        "usage_guidance": [
+          "All measures use MEASURE(). Revenue per Mtok divided by loaded cost per Mtok is the profitability index."
+        ]
+      },
+      {
+        "id": "650575febc51535d82ac896cb3372008",
+        "question": [
+          "Compare all-confidence and proven-only profitability by business unit."
+        ],
+        "sql": [
+          "WITH roi AS (\n",
+          "  SELECT `Business Unit` AS business_unit,\n",
+          "         MEASURE(`Realised Value All`) AS realised_value_all,\n",
+          "         MEASURE(`Realised Value Proven`) AS realised_value_proven,\n",
+          "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost\n",
+          "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+          "  GROUP BY ALL\n",
+          ")\n",
+          "SELECT roi.business_unit,\n",
+          "       ROUND(roi.realised_value_all / NULLIF(roi.fully_loaded_cost, 0), 3) AS profitability_index_all,\n",
+          "       ROUND(roi.realised_value_proven / NULLIF(roi.fully_loaded_cost, 0), 3) AS profitability_index_proven,\n",
+          "       ROUND((roi.realised_value_all - roi.realised_value_proven)\n",
+          "             / NULLIF(roi.fully_loaded_cost, 0), 3) AS modelled_index_gap\n",
+          "FROM roi\n",
+          "ORDER BY profitability_index_all ASC"
+        ],
+        "usage_guidance": [
+          "All value includes modelled value; proven includes metered and attested value only. State both scopes."
+        ]
+      },
+      {
+        "id": "b11dfa7b8b785a8f84ef5bec4fa932bb",
+        "question": [
+          "Filter fully loaded cost per million tokens by model."
+        ],
+        "sql": [
+          "WITH roi AS (\n",
+          "  SELECT `Model` AS model,\n",
+          "         MEASURE(`Fully Loaded Cost per Mtok`) AS fully_loaded_cost_per_mtok,\n",
+          "         MEASURE(`Token Cost per Mtok`) AS token_cost_per_mtok\n",
+          "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+          "  GROUP BY ALL\n",
+          ")\n",
+          "SELECT roi.model,\n",
+          "       ROUND(roi.fully_loaded_cost_per_mtok, 2) AS fully_loaded_cost_per_mtok_usd,\n",
+          "       ROUND(roi.token_cost_per_mtok, 2) AS token_cost_per_mtok_usd\n",
+          "FROM roi\n",
+          "ORDER BY fully_loaded_cost_per_mtok ASC"
+        ],
+        "usage_guidance": [
+          "Model-level unit cost uses MEASURE() on the metric view."
+        ]
+      },
+      {
+        "id": "b1bb5dedfa23509a8693ac0995e3ae45",
+        "question": [
+          "What is programme-to-date net value and profitability?"
+        ],
+        "sql": [
+          "SELECT ROUND(MEASURE(`Realised Value All`), 2) AS realised_value_all_usd,\n",
+          "       ROUND(MEASURE(`Realised Value Proven`), 2) AS realised_value_proven_usd,\n",
+          "       ROUND(MEASURE(`Fully Loaded Cost`), 2) AS fully_loaded_cost_usd,\n",
+          "       ROUND(MEASURE(`Realised Value All`) - MEASURE(`Fully Loaded Cost`), 2) AS net_value_usd,\n",
+          "       ROUND(MEASURE(`Profitability Index`), 3) AS profitability_index\n",
+          "FROM office_of_cfo.fsi_serving.mv_ai_roi"
+        ],
+        "usage_guidance": [
+          "Programme-to-date summary from governed measures; profitability is a ratio, not a percentage."
+        ]
+      },
+      {
+        "id": "fe85f3ac163e5bc78c115190f851809a",
+        "question": [
+          "Which use cases are closest to break-even?"
+        ],
+        "sql": [
+          "WITH roi AS (\n",
+          "  SELECT `Use Case` AS use_case,\n",
+          "         MEASURE(`Realised Value All`) AS realised_value_all,\n",
+          "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost,\n",
+          "         MEASURE(`Profitability Index`) AS profitability_index\n",
+          "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+          "  GROUP BY ALL\n",
+          ")\n",
+          "SELECT roi.use_case,\n",
+          "       ROUND(roi.realised_value_all, 2) AS realised_value_all_usd,\n",
+          "       ROUND(roi.fully_loaded_cost, 2) AS fully_loaded_cost_usd,\n",
+          "       ROUND(roi.profitability_index, 3) AS profitability_index,\n",
+          "       ROUND(ABS(roi.profitability_index - 1), 3) AS distance_from_break_even\n",
+          "FROM roi\n",
+          "ORDER BY distance_from_break_even ASC\n",
+          "LIMIT 10"
+        ],
+        "usage_guidance": [
+          "Rank by absolute distance from 1.0 after aggregating the metric view in a CTE."
+        ]
+      }
+    ]
+  },
+  "benchmarks": {
+    "questions": [
+      {
+        "id": "036907174ef753bfa372d7cb90b4c3a7",
+        "question": [
+          "For fsi, filter fully loaded cost per million tokens by model."
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Model` AS model,\n",
+              "         MEASURE(`Fully Loaded Cost per Mtok`) AS fully_loaded_cost_per_mtok,\n",
+              "         MEASURE(`Token Cost per Mtok`) AS token_cost_per_mtok\n",
+              "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.model,\n",
+              "       ROUND(roi.fully_loaded_cost_per_mtok, 2) AS fully_loaded_cost_per_mtok_usd,\n",
+              "       ROUND(roi.token_cost_per_mtok, 2) AS token_cost_per_mtok_usd\n",
+              "FROM roi\n",
+              "ORDER BY fully_loaded_cost_per_mtok ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "0f32a253a12e57b2b201ba5fbcbf79ca",
+        "question": [
+          "For fsi, which business units return less than they cost?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Business Unit` AS business_unit,\n",
+              "         MEASURE(`Realised Value All`) AS realised_value_all,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost,\n",
+              "         MEASURE(`Profitability Index`) AS profitability_index\n",
+              "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.business_unit,\n",
+              "       ROUND(roi.realised_value_all, 2) AS realised_value_all_usd,\n",
+              "       ROUND(roi.fully_loaded_cost, 2) AS fully_loaded_cost_usd,\n",
+              "       ROUND(roi.profitability_index, 3) AS profitability_index,\n",
+              "       CASE WHEN roi.profitability_index < 1 THEN 'below break-even'\n",
+              "            ELSE 'at or above break-even' END AS break_even_status\n",
+              "FROM roi\n",
+              "ORDER BY profitability_index ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "15fd524a63b75b29a9efc95c7705f464",
+        "question": [
+          "For fsi, which use cases are closest to break-even?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Use Case` AS use_case,\n",
+              "         MEASURE(`Realised Value All`) AS realised_value_all,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost,\n",
+              "         MEASURE(`Profitability Index`) AS profitability_index\n",
+              "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.use_case,\n",
+              "       ROUND(roi.realised_value_all, 2) AS realised_value_all_usd,\n",
+              "       ROUND(roi.fully_loaded_cost, 2) AS fully_loaded_cost_usd,\n",
+              "       ROUND(roi.profitability_index, 3) AS profitability_index,\n",
+              "       ROUND(ABS(roi.profitability_index - 1), 3) AS distance_from_break_even\n",
+              "FROM roi\n",
+              "ORDER BY distance_from_break_even ASC\n",
+              "LIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "26a404b5c8ad5b858886c5f481976832",
+        "question": [
+          "For fsi, what is net value by business unit?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Business Unit` AS business_unit,\n",
+              "         MEASURE(`Net Value`) AS net_value,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost\n",
+              "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.business_unit,\n",
+              "       ROUND(roi.net_value, 2) AS net_value_usd,\n",
+              "       ROUND(roi.fully_loaded_cost, 2) AS fully_loaded_cost_usd\n",
+              "FROM roi\n",
+              "ORDER BY net_value ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "4213796f83c05bf7b1ed985f4b487dc4",
+        "question": [
+          "For fsi, which markets have the highest revenue per million tokens?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Market` AS market,\n",
+              "         MEASURE(`Revenue per Mtok`) AS revenue_per_mtok,\n",
+              "         MEASURE(`Fully Loaded Cost per Mtok`) AS fully_loaded_cost_per_mtok\n",
+              "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.market,\n",
+              "       ROUND(roi.revenue_per_mtok, 2) AS revenue_per_mtok_usd,\n",
+              "       ROUND(roi.fully_loaded_cost_per_mtok, 2) AS fully_loaded_cost_per_mtok_usd\n",
+              "FROM roi\n",
+              "ORDER BY revenue_per_mtok DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "51a6bb328b6255dd84dceb2a765224dd",
+        "question": [
+          "Which markets have the highest revenue per million tokens?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Market` AS market,\n",
+              "         MEASURE(`Revenue per Mtok`) AS revenue_per_mtok,\n",
+              "         MEASURE(`Fully Loaded Cost per Mtok`) AS fully_loaded_cost_per_mtok\n",
+              "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.market,\n",
+              "       ROUND(roi.revenue_per_mtok, 2) AS revenue_per_mtok_usd,\n",
+              "       ROUND(roi.fully_loaded_cost_per_mtok, 2) AS fully_loaded_cost_per_mtok_usd\n",
+              "FROM roi\n",
+              "ORDER BY revenue_per_mtok DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "617661818d0450619adefdea07d419f2",
+        "question": [
+          "For fsi, what is programme-to-date net value and profitability?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT ROUND(MEASURE(`Realised Value All`), 2) AS realised_value_all_usd,\n",
+              "       ROUND(MEASURE(`Realised Value Proven`), 2) AS realised_value_proven_usd,\n",
+              "       ROUND(MEASURE(`Fully Loaded Cost`), 2) AS fully_loaded_cost_usd,\n",
+              "       ROUND(MEASURE(`Realised Value All`) - MEASURE(`Fully Loaded Cost`), 2) AS net_value_usd,\n",
+              "       ROUND(MEASURE(`Profitability Index`), 3) AS profitability_index\n",
+              "FROM office_of_cfo.fsi_serving.mv_ai_roi"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "753a15010d2a509ab67488907a8980e2",
+        "question": [
+          "Which use cases are closest to break-even?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Use Case` AS use_case,\n",
+              "         MEASURE(`Realised Value All`) AS realised_value_all,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost,\n",
+              "         MEASURE(`Profitability Index`) AS profitability_index\n",
+              "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.use_case,\n",
+              "       ROUND(roi.realised_value_all, 2) AS realised_value_all_usd,\n",
+              "       ROUND(roi.fully_loaded_cost, 2) AS fully_loaded_cost_usd,\n",
+              "       ROUND(roi.profitability_index, 3) AS profitability_index,\n",
+              "       ROUND(ABS(roi.profitability_index - 1), 3) AS distance_from_break_even\n",
+              "FROM roi\n",
+              "ORDER BY distance_from_break_even ASC\n",
+              "LIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "7b034b9c68965019835774e4a79379d9",
+        "question": [
+          "Which business units return less than they cost?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Business Unit` AS business_unit,\n",
+              "         MEASURE(`Realised Value All`) AS realised_value_all,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost,\n",
+              "         MEASURE(`Profitability Index`) AS profitability_index\n",
+              "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.business_unit,\n",
+              "       ROUND(roi.realised_value_all, 2) AS realised_value_all_usd,\n",
+              "       ROUND(roi.fully_loaded_cost, 2) AS fully_loaded_cost_usd,\n",
+              "       ROUND(roi.profitability_index, 3) AS profitability_index,\n",
+              "       CASE WHEN roi.profitability_index < 1 THEN 'below break-even'\n",
+              "            ELSE 'at or above break-even' END AS break_even_status\n",
+              "FROM roi\n",
+              "ORDER BY profitability_index ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "c6dd34140fd1585d8695dc526a79031a",
+        "question": [
+          "For fsi, compare all-confidence and proven-only profitability by business unit."
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Business Unit` AS business_unit,\n",
+              "         MEASURE(`Realised Value All`) AS realised_value_all,\n",
+              "         MEASURE(`Realised Value Proven`) AS realised_value_proven,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost\n",
+              "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.business_unit,\n",
+              "       ROUND(roi.realised_value_all / NULLIF(roi.fully_loaded_cost, 0), 3) AS profitability_index_all,\n",
+              "       ROUND(roi.realised_value_proven / NULLIF(roi.fully_loaded_cost, 0), 3) AS profitability_index_proven,\n",
+              "       ROUND((roi.realised_value_all - roi.realised_value_proven)\n",
+              "             / NULLIF(roi.fully_loaded_cost, 0), 3) AS modelled_index_gap\n",
+              "FROM roi\n",
+              "ORDER BY profitability_index_all ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "c88f8a9c0c685193a1d0a4274d6ce0cb",
+        "question": [
+          "Compare all-confidence and proven-only profitability by business unit."
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Business Unit` AS business_unit,\n",
+              "         MEASURE(`Realised Value All`) AS realised_value_all,\n",
+              "         MEASURE(`Realised Value Proven`) AS realised_value_proven,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost\n",
+              "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.business_unit,\n",
+              "       ROUND(roi.realised_value_all / NULLIF(roi.fully_loaded_cost, 0), 3) AS profitability_index_all,\n",
+              "       ROUND(roi.realised_value_proven / NULLIF(roi.fully_loaded_cost, 0), 3) AS profitability_index_proven,\n",
+              "       ROUND((roi.realised_value_all - roi.realised_value_proven)\n",
+              "             / NULLIF(roi.fully_loaded_cost, 0), 3) AS modelled_index_gap\n",
+              "FROM roi\n",
+              "ORDER BY profitability_index_all ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "cd5424e6ffbd5011a313d6ace3639d40",
+        "question": [
+          "Show the monthly unit economics trend."
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH monthly AS (\n",
+              "  SELECT `Month` AS month,\n",
+              "         MEASURE(`Total Tokens`) AS tokens,\n",
+              "         MEASURE(`Token Run Cost`) AS run_cost,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost,\n",
+              "         MEASURE(`Realised Value All`) AS realised_value_all\n",
+              "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT month,\n",
+              "       ROUND(realised_value_all / NULLIF(tokens / 1000000.0, 0), 2) AS revenue_per_mtok_usd,\n",
+              "       ROUND(fully_loaded_cost / NULLIF(tokens / 1000000.0, 0), 2) AS fully_loaded_cost_per_mtok_usd,\n",
+              "       ROUND(run_cost / NULLIF(tokens / 1000000.0, 0), 2) AS run_cost_per_mtok_usd,\n",
+              "       ROUND(realised_value_all / NULLIF(fully_loaded_cost, 0), 3) AS profitability_index\n",
+              "FROM monthly\n",
+              "ORDER BY month"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "da96af78c2e35f1fa54278d9621b5c3c",
+        "question": [
+          "What is net value by business unit?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Business Unit` AS business_unit,\n",
+              "         MEASURE(`Net Value`) AS net_value,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost\n",
+              "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.business_unit,\n",
+              "       ROUND(roi.net_value, 2) AS net_value_usd,\n",
+              "       ROUND(roi.fully_loaded_cost, 2) AS fully_loaded_cost_usd\n",
+              "FROM roi\n",
+              "ORDER BY net_value ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "f26f862172c653ca82dfa5d592e0810a",
+        "question": [
+          "For fsi, show the monthly unit economics trend."
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH monthly AS (\n",
+              "  SELECT `Month` AS month,\n",
+              "         MEASURE(`Total Tokens`) AS tokens,\n",
+              "         MEASURE(`Token Run Cost`) AS run_cost,\n",
+              "         MEASURE(`Fully Loaded Cost`) AS fully_loaded_cost,\n",
+              "         MEASURE(`Realised Value All`) AS realised_value_all\n",
+              "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT month,\n",
+              "       ROUND(realised_value_all / NULLIF(tokens / 1000000.0, 0), 2) AS revenue_per_mtok_usd,\n",
+              "       ROUND(fully_loaded_cost / NULLIF(tokens / 1000000.0, 0), 2) AS fully_loaded_cost_per_mtok_usd,\n",
+              "       ROUND(run_cost / NULLIF(tokens / 1000000.0, 0), 2) AS run_cost_per_mtok_usd,\n",
+              "       ROUND(realised_value_all / NULLIF(fully_loaded_cost, 0), 3) AS profitability_index\n",
+              "FROM monthly\n",
+              "ORDER BY month"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "fde55fbd398256c792b28b8197159c56",
+        "question": [
+          "What is programme-to-date net value and profitability?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT ROUND(MEASURE(`Realised Value All`), 2) AS realised_value_all_usd,\n",
+              "       ROUND(MEASURE(`Realised Value Proven`), 2) AS realised_value_proven_usd,\n",
+              "       ROUND(MEASURE(`Fully Loaded Cost`), 2) AS fully_loaded_cost_usd,\n",
+              "       ROUND(MEASURE(`Realised Value All`) - MEASURE(`Fully Loaded Cost`), 2) AS net_value_usd,\n",
+              "       ROUND(MEASURE(`Profitability Index`), 3) AS profitability_index\n",
+              "FROM office_of_cfo.fsi_serving.mv_ai_roi"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "fff0a327121f58b4a96763798b86aef6",
+        "question": [
+          "Filter fully loaded cost per million tokens by model."
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH roi AS (\n",
+              "  SELECT `Model` AS model,\n",
+              "         MEASURE(`Fully Loaded Cost per Mtok`) AS fully_loaded_cost_per_mtok,\n",
+              "         MEASURE(`Token Cost per Mtok`) AS token_cost_per_mtok\n",
+              "  FROM office_of_cfo.fsi_serving.mv_ai_roi\n",
+              "  GROUP BY ALL\n",
+              ")\n",
+              "SELECT roi.model,\n",
+              "       ROUND(roi.fully_loaded_cost_per_mtok, 2) AS fully_loaded_cost_per_mtok_usd,\n",
+              "       ROUND(roi.token_cost_per_mtok, 2) AS token_cost_per_mtok_usd\n",
+              "FROM roi\n",
+              "ORDER BY fully_loaded_cost_per_mtok ASC"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
