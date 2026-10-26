@@ -323,8 +323,8 @@ export default function App() {
           {page === "approvals" && <Approvals persona={persona} onDataChange={refreshAll} refreshKey={refreshKey} />}
           {page === "stress-test" && <StressTest scope={scope} org={org} refreshKey={refreshKey} />}
           {page === "market-insights" && <MarketInsights refreshKey={refreshKey} onNavigate={navigate} />}
-          {page === "scenario-planning" && <ScenarioPlanning refreshKey={refreshKey} persona={persona} />}
-          {page === "cash-flow" && <CashFlow refreshKey={refreshKey} />}
+          {page === "scenario-planning" && <ScenarioPlanning refreshKey={refreshKey} persona={persona} query={hashQuery} onNavigate={navigate} />}
+          {page === "cash-flow" && <CashFlow refreshKey={refreshKey} query={hashQuery} onNavigate={navigate} />}
           {page === "thirteen-week-cash" && <ThirteenWeekCash refreshKey={refreshKey} />}
           {page === "exposure" && <ExposureNetwork persona={persona} onNavigate={navigate} refreshKey={refreshKey} />}
           {page === "inventory-exposure" && <InventoryExposure scope={scope} refreshKey={refreshKey} />}

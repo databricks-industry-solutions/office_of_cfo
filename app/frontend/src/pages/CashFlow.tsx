@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import {
   api, DriverDef, PlanListItem, ProjectResult, ScenarioPlan, StatementSet,
   fmtCompact, fmtSignedCompact,
@@ -9,6 +9,7 @@ import { CHART_AXIS_TEXT_PIXEL, CHART_COLORS } from "../lib/chartPalette";
 import { useChartSize } from "../lib/useChartSize";
 import { cn } from "../lib/cn";
 import { defaultMinCash, liquidityOutlook, LiquidityOutlook } from "../lib/liquidity";
+import type { PageId } from "../nav";
 
 // What the forecast baseline is built from — shown so the CFO knows why the line bends.
 const BASELINE_SOURCE_COPY: Record<NonNullable<ProjectResult["baseline_source"]>, string> = {
@@ -66,32 +67,6 @@ const SECTIONS: SectionDef[] = [
 // statement. Shown only when non-zero (forecast months always carry 0).
 const OTHER_CASH_ROW: Row = { id: "other_cash", label: "Other operating items, net" };
 const hasOtherCash = (s: StatementSet) => (s.lines.other_cash ?? []).some((v) => Math.abs(v) >= 1);
-
-// Driver groups, in the order the lever panel shows them. Only these groups are
-// rendered as sliders; anything else the catalog adds is ignored here.
-const GROUP_ORDER = ["Revenue", "Cost", "Working capital & capex", "Investing", "Financing"];
-
-// Which way a lever helps CASH when it increases (the Cash Flow lens). Used only to
-// tint a moved lever favorable (adds cash) / unfavorable (drains cash) — untouched
-// levers stay neutral. Restrained, semantic colour: no new decorative hues.
-const LEVER_DIRECTION: Record<string, "positive" | "negative"> = {
-  revenue_growth: "positive", gross_margin: "positive", opex_growth: "negative",
-  dso: "negative", dpo: "positive", dio: "negative", capex_pct: "negative",
-  asset_sales: "positive", debt_draw: "positive",
-  acquisitions: "negative", debt_repayment: "negative", dividend_payout: "negative",
-};
-type Polarity = "neutral" | "favorable" | "unfavorable";
-function leverPolarity(id: string, value: number): Polarity {
-  if (!value) return "neutral";
-  const better = (LEVER_DIRECTION[id] ?? "positive") === "positive" ? value > 0 : value < 0;
-  return better ? "favorable" : "unfavorable";
-}
-const POLARITY_TEXT: Record<Polarity, string> = {
-  neutral: "text-fg-subtle", favorable: "text-signal-good", unfavorable: "text-signal-bad",
-};
-const POLARITY_ACCENT: Record<Polarity, string> = {
-  neutral: "accent-accent", favorable: "accent-signal-good", unfavorable: "accent-signal-bad",
-};
 
 const fy = (s: StatementSet, id: string) => (s.lines[id] ?? []).reduce((a, b) => a + b, 0);
 const monthLabel = (p: string) => {
@@ -286,26 +261,6 @@ function CashBalanceChart({ ss, base, showBase, minCash, outlook }: {
   );
 }
 
-// ── Lever slider ─────────────────────────────────────────────────────────────
-function Lever({ d, value, onChange }: { d: DriverDef; value: number; onChange: (v: number) => void }) {
-  const min = d.min ?? -20, max = d.max ?? 20, step = d.step ?? 1;
-  const polarity = leverPolarity(d.id, value);
-  return (
-    <label className="block">
-      <div className="flex items-baseline justify-between gap-2 mb-1">
-        <span className="text-xs text-fg">{d.label}</span>
-        <span className={cn("text-xs num tabular-nums font-medium", POLARITY_TEXT[polarity])}>
-          {value > 0 ? "+" : ""}{value}{" "}{d.unit}
-        </span>
-      </div>
-      <input type="range" min={min} max={max} step={step} value={value}
-             onChange={(e) => onChange(Number(e.target.value))}
-             className={cn("w-full", POLARITY_ACCENT[polarity])}
-             aria-label={`${d.label} (${d.unit})`} />
-    </label>
-  );
-}
-
 // ── Statement table ──────────────────────────────────────────────────────────
 function StatementTable({ ss }: { ss: StatementSet }) {
   const periods = ss.periods;
@@ -397,7 +352,7 @@ function StatementTable({ ss }: { ss: StatementSet }) {
       </table>
       <p className="text-[11px] text-fg-subtle mt-2">
         Columns left of the divider are locked actuals, tied to posted cash; the shaded columns are the
-        forecast the levers flex, rolling on from the last posted balance.
+        forecast the scenario flexes, rolling on from the last posted balance.
         Ending cash = beginning cash + net change (CFO + CFI + CFF{hasOtherCash(ss) ? " + other operating items" : ""}), tied out every period.
         {hasOtherCash(ss) && " Other operating items, net = posted cash movements from balance-sheet lines the model doesn't break out."}
       </p>
@@ -406,111 +361,80 @@ function StatementTable({ ss }: { ss: StatementSet }) {
 }
 
 // ── Page ─────────────────────────────────────────────────────────────────────
-export default function CashFlow({ refreshKey }: { refreshKey: number }) {
+/** `scenario=<id>` from the page's hash query (deep link from Scenario Planning). */
+export function scenarioFromQuery(query: string | undefined): string | null {
+  return new URLSearchParams(query ?? "").get("scenario") || null;
+}
+
+/** A saved scenario's assumption values (the store keeps `{ value, unit, … }`). */
+export function planValues(plan: ScenarioPlan | null): Record<string, number> {
+  const a: Record<string, number> = {};
+  if (plan) Object.entries(plan.assumptions).forEach(([k, v]) => { a[k] = v.value; });
+  return a;
+}
+
+// Cash Flow is a read-only lens: the levers live on Scenario Planning (the one place
+// planning assumptions are edited); this page reads a saved scenario — or the
+// baseline — and shows its cash. Minimum cash stays here until it becomes a policy.
+const NO_EDITABLE = new Set<string>();
+
+export default function CashFlow({ refreshKey, query, onNavigate }: {
+  refreshKey: number;
+  /** Hash query, e.g. `scenario=<id>` to open a specific scenario. */
+  query?: string;
+  onNavigate?: (page: PageId, query?: string) => void;
+}) {
   const [drivers, setDrivers] = useState<DriverDef[]>([]);
-  const [assumptions, setAssumptions] = useState<Record<string, number>>({});
   const [result, setResult] = useState<ProjectResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // Lever groups the user has expanded/collapsed; unset → only the first is open.
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Minimum cash in $M; null = the default policy (one month of operating costs).
   const [minCashM, setMinCashM] = useState<number | null>(null);
   useEffect(() => { setMinCashM(null); }, [refreshKey]);
 
-  // Shared scenario library (same store as Scenario Planning — Cash Flow is a lens
-  // on the same objects, not a separate forecast).
+  // Shared scenario library (same store as Scenario Planning).
   const [plans, setPlans] = useState<PlanListItem[]>([]);
-  const [loadedPlan, setLoadedPlan] = useState<ScenarioPlan | null>(null);
-  const [name, setName] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [plan, setPlan] = useState<ScenarioPlan | null>(null);
+  const [selectedId, setSelectedId] = useState<string>(() => scenarioFromQuery(query) ?? "");
+  useEffect(() => { setSelectedId(scenarioFromQuery(query) ?? ""); }, [query]);
 
-  // Load the driver catalog + scenario list (per refresh / industry switch).
   useEffect(() => {
     let live = true;
     api.scenarioDrivers()
       .then((d) => { if (live) setDrivers(d.drivers); })
       .catch((e) => { if (live) setError(String(e.message ?? e)); });
+    api.scenarioPlans()
+      .then((r) => { if (live) setPlans(r.plans ?? []); })
+      .catch(() => { if (live) setPlans([]); });
     return () => { live = false; };
   }, [refreshKey]);
 
-  const refreshPlans = useCallback(() => {
-    api.scenarioPlans().then((r) => setPlans(r.plans ?? [])).catch(() => setPlans([]));
-  }, []);
-  useEffect(() => { refreshPlans(); }, [refreshPlans, refreshKey]);
-
-  // Project (debounced) whenever the levers change.
+  // Load the selected scenario ("" = baseline).
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      setLoading(true);
-      api.scenarioProject(nonZero(assumptions))
-        .then((r) => { setResult(r); setError(null); })
-        .catch((e) => setError(String(e.message ?? e)))
-        .finally(() => setLoading(false));
-    }, 250);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    let live = true;
+    if (!selectedId) { setPlan(null); return; }
+    api.scenarioPlan(selectedId)
+      .then((p) => { if (live) setPlan(p); })
+      .catch((e) => { if (live) { setPlan(null); setError(String(e.message ?? e)); } });
+    return () => { live = false; };
+  }, [selectedId, refreshKey]);
+
+  const assumptions = useMemo(() => planValues(plan), [plan]);
+  const anyLever = Object.values(assumptions).some((v) => v !== 0);
+
+  // Project whenever the scenario changes.
+  useEffect(() => {
+    let live = true;
+    setLoading(true);
+    api.scenarioProject(nonZero(assumptions))
+      .then((r) => { if (live) { setResult(r); setError(null); } })
+      .catch((e) => { if (live) setError(String(e.message ?? e)); })
+      .finally(() => { if (live) setLoading(false); });
+    return () => { live = false; };
   }, [assumptions, refreshKey]);
-
-  const grouped = useMemo(() => {
-    const by: Record<string, DriverDef[]> = {};
-    for (const d of drivers) (by[d.group ?? "Other"] ??= []).push(d);
-    return GROUP_ORDER.filter((g) => by[g]?.length).map((g) => ({ group: g, items: by[g] }));
-  }, [drivers]);
-
-  // ids this lens renders as editable levers (Cash Flow shows every group).
-  const editableIds = useMemo(
-    () => new Set(grouped.flatMap((g) => g.items.map((d) => d.id))), [grouped]);
-
-  // Load a scenario's FULL assumption set (never drop levers this lens doesn't edit).
-  const loadScenario = useCallback((id: string) => {
-    if (!id) { setLoadedPlan(null); setName(""); setAssumptions({}); return; }
-    api.scenarioPlan(id).then((plan) => {
-      const a: Record<string, number> = {};
-      Object.entries(plan.assumptions).forEach(([k, v]) => { a[k] = v.value; });
-      setLoadedPlan(plan); setName(plan.name); setAssumptions(a);
-    }).catch((e) => setError(String(e.message ?? e)));
-  }, []);
-
-  const loaded = useMemo(() => {
-    const a: Record<string, number> = {};
-    if (loadedPlan) Object.entries(loadedPlan.assumptions).forEach(([k, v]) => { a[k] = v.value; });
-    return a;
-  }, [loadedPlan]);
-
-  const isDirty = useMemo(() => {
-    const ids = new Set([...Object.keys(loaded), ...Object.keys(nonZero(assumptions))]);
-    for (const id of ids) if ((loaded[id] ?? 0) !== (assumptions[id] ?? 0)) return true;
-    return false;
-  }, [assumptions, loaded]);
-
-  const canUpdate = loadedPlan?.status === "draft";
-
-  const saveAsNew = useCallback(async () => {
-    setSaving(true);
-    try {
-      const created = await api.scenarioCreate({
-        name: name.trim() || "New cash-flow scenario", assumptions: nonZero(assumptions) });
-      setLoadedPlan(created); setName(created.name); refreshPlans();
-    } catch (e) { setError(String((e as Error).message ?? e)); }
-    finally { setSaving(false); }
-  }, [name, assumptions, refreshPlans]);
-
-  const saveUpdate = useCallback(async () => {
-    if (!loadedPlan) return;
-    setSaving(true);
-    try {
-      const updated = await api.scenarioPatch(loadedPlan.scenario_id, {
-        name: name.trim() || loadedPlan.name, assumptions: nonZero(assumptions) });
-      setLoadedPlan(updated); refreshPlans();
-    } catch (e) { setError(String((e as Error).message ?? e)); }
-    finally { setSaving(false); }
-  }, [loadedPlan, name, assumptions, refreshPlans]);
 
   const ss = result?.projection;
   const base = result?.baseline;
-  const anyLever = Object.values(assumptions).some((v) => v !== 0);
 
   const defaultMin = base ? defaultMinCash(base) : 0;
   const minCash = minCashM !== null ? minCashM * 1e6 : defaultMin;
@@ -546,44 +470,36 @@ export default function CashFlow({ refreshKey }: { refreshKey: number }) {
           : { tone: "good", text: `▲ ${fmtCompact(outlook.headroom)} above minimum · ${monthLabel(ss.periods[outlook.lowIndex])}` } },
   ];
 
+  const editLink = () => onNavigate?.("scenario-planning", selectedId ? `scenario=${encodeURIComponent(selectedId)}` : "");
+
   return (
     <div className="space-y-5">
-      {/* Scenario bar — same shared library as Scenario Planning */}
+      {/* Scenario bar — reads the shared library; edits happen on Scenario Planning */}
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs text-fg-subtle">Scenario</span>
         <select
-          value={loadedPlan?.scenario_id ?? ""}
-          onChange={(e) => loadScenario(e.target.value)}
+          value={selectedId}
+          onChange={(e) => setSelectedId(e.target.value)}
           className="rounded-md ring-1 ring-line bg-ink-800 text-fg text-sm px-2 py-1 max-w-[16rem]"
-          aria-label="Load scenario">
-          <option value="">Baseline (unsaved what-if)</option>
-          {plans.map((p) => (
+          aria-label="Scenario">
+          <option value="">Baseline (no changes)</option>
+          {plans.filter((p) => !p.is_baseline).map((p) => (
             <option key={p.scenario_id} value={p.scenario_id}>
-              {p.name}{p.is_baseline ? " · baseline" : p.status !== "draft" ? ` · ${p.status}` : ""}
+              {p.name}{p.status !== "draft" ? ` · ${p.status}` : ""}
             </option>
           ))}
         </select>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Scenario name"
-          className="rounded-md ring-1 ring-line bg-ink-800 text-fg text-sm px-2 py-1 w-48" />
-        {canUpdate && (
-          <button type="button" onClick={saveUpdate} disabled={!isDirty || saving}
-            className="rounded-md bg-accent text-white text-xs px-3 py-1.5 disabled:opacity-40">
-            {saving ? "Saving…" : "Save"}
+        {onNavigate && (
+          <button type="button" onClick={editLink} className="text-xs text-accent hover:underline">
+            {selectedId ? "Edit assumptions in Scenario Planning →" : "Build a scenario in Scenario Planning →"}
           </button>
         )}
-        <button type="button" onClick={saveAsNew} disabled={saving || !anyLever}
-          className="rounded-md ring-1 ring-line text-fg text-xs px-3 py-1.5 disabled:opacity-40"
-          title={!anyLever ? "Set at least one lever to save a scenario" : undefined}>
-          Save as new
-        </button>
-        {loadedPlan && isDirty && <span className="text-xs text-signal-warn">● unsaved changes</span>}
-        {loadedPlan && !isDirty && loadedPlan.status !== "draft" && (
-          <span className="text-xs text-fg-subtle">{loadedPlan.status} · immutable, save as new to edit</span>
-        )}
       </div>
+
+      {anyLever && (
+        <OffLensAssumptions drivers={drivers} assumptions={assumptions} editableIds={NO_EDITABLE}
+                            title="Scenario assumptions" note="(edit on Scenario Planning)" />
+      )}
 
       {error && <ErrorNote message={error} />}
 
@@ -608,91 +524,48 @@ export default function CashFlow({ refreshKey }: { refreshKey: number }) {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)] gap-5">
-        {/* Levers */}
-        <Card title="Levers" subtitle="Flex the forecast; actuals stay locked">
-          <div className="px-5 py-4 space-y-4">
-            {grouped.length === 0 && <Skeleton className="h-40 w-full" />}
-            {grouped.map(({ group, items }) => {
-              const open = openGroups[group] ?? group === grouped[0]?.group;
-              const moved = items.filter((d) => (assumptions[d.id] ?? 0) !== 0).length;
-              return (
-                <div key={group}>
-                  <button type="button" aria-expanded={open}
-                          onClick={() => setOpenGroups((o) => ({ ...o, [group]: !open }))}
-                          className="w-full flex items-center gap-2 text-left">
-                    <span className="text-fg-subtle text-xs w-3 shrink-0">{open ? "▾" : "▸"}</span>
-                    <span className="text-[11px] uppercase tracking-wide text-fg-subtle font-semibold">{group}</span>
-                    {moved > 0 && <span className="ml-auto text-[10px] text-accent">{moved} moved</span>}
-                  </button>
-                  {open && (
-                    <div className="space-y-3 mt-2">
-                      {items.map((d) => (
-                        <Lever key={d.id} d={d} value={assumptions[d.id] ?? 0}
-                               onChange={(v) => setAssumptions((a) => ({ ...a, [d.id]: v }))} />
-                      ))}
-                    </div>
-                  )}
+      <Card title="Cash balance vs minimum" subtitle="Monthly; actuals tie to posted cash, shaded months are forecast"
+            action={
+              <div className="flex flex-col items-end gap-1 text-xs text-fg-subtle shrink-0">
+                <div className="flex items-center gap-2">
+                  <label htmlFor="min-cash">Minimum cash ($M)</label>
+                  <input id="min-cash" type="number" step="0.1" min="0"
+                         value={minCashM ?? Number((defaultMin / 1e6).toFixed(1))}
+                         onChange={(e) => setMinCashM(e.target.value === "" ? null : Number(e.target.value))}
+                         className="w-20 rounded-md ring-1 ring-line bg-ink-800 text-fg text-xs px-2 py-1 num tabular-nums" />
                 </div>
-              );
-            })}
-            <OffLensAssumptions drivers={drivers} assumptions={assumptions} editableIds={editableIds} />
-            {anyLever && (
-              <button type="button"
-                      onClick={() => { setAssumptions({}); setLoadedPlan(null); setName(""); }}
-                      className="text-xs text-accent hover:underline">
-                Reset to baseline
-              </button>
-            )}
-          </div>
-        </Card>
-
-        {/* Bridge + statement */}
-        <div className="space-y-5">
-          <Card title="Cash balance vs minimum" subtitle="Monthly; actuals tie to posted cash, shaded months are forecast"
-                action={
-                  <div className="flex flex-col items-end gap-1 text-xs text-fg-subtle shrink-0">
-                    <div className="flex items-center gap-2">
-                      <label htmlFor="min-cash">Minimum cash ($M)</label>
-                      <input id="min-cash" type="number" step="0.5" min="0"
-                             value={minCashM ?? Number((defaultMin / 1e6).toFixed(1))}
-                             onChange={(e) => setMinCashM(e.target.value === "" ? null : Number(e.target.value))}
-                             className="w-20 rounded-md ring-1 ring-line bg-ink-800 text-fg text-xs px-2 py-1 num tabular-nums" />
-                    </div>
-                    {minCashM === null
-                      ? <span className="text-[11px]">default: one month of operating costs (COGS + opex)</span>
-                      : <button type="button" onClick={() => setMinCashM(null)} className="text-[11px] text-accent hover:underline">
-                          reset to one month of operating costs
-                        </button>}
-                  </div>
-                }>
-            <div className="px-4 py-4">
-              {ss ? <CashBalanceChart ss={ss} base={base} showBase={anyLever} minCash={minCash} outlook={outlook} />
-                  : <Skeleton className="h-56 w-full" />}
-              {result?.baseline_source && (
-                <p className="text-[11px] text-fg-subtle mt-2">
-                  <span className="font-semibold text-fg-muted">Forecast baseline:</span>{" "}
-                  {BASELINE_SOURCE_COPY[result.baseline_source]}
-                </p>
-              )}
-            </div>
-          </Card>
-          <Card title="Cash bridge" subtitle="Full year: beginning cash → drivers → ending cash">
-            <div className="px-4 py-4">
-              {ss ? <CashBridge ss={ss} /> : <Skeleton className="h-64 w-full" />}
-            </div>
-          </Card>
-          <Card title="Cash flow statement" subtitle="Operating · investing · financing, tied out to the cash balance">
-            <div className="px-5 py-4">
-              {ss ? <StatementTable ss={ss} /> : (
-                <div className="space-y-2">
-                  {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-5 w-full" />)}
-                </div>
-              )}
-            </div>
-          </Card>
+                {minCashM === null
+                  ? <span className="text-[11px]">default: one month of operating costs (COGS + opex)</span>
+                  : <button type="button" onClick={() => setMinCashM(null)} className="text-[11px] text-accent hover:underline">
+                      reset to one month of operating costs
+                    </button>}
+              </div>
+            }>
+        <div className="px-4 py-4">
+          {ss ? <CashBalanceChart ss={ss} base={base} showBase={anyLever} minCash={minCash} outlook={outlook} />
+              : <Skeleton className="h-56 w-full" />}
+          {result?.baseline_source && (
+            <p className="text-[11px] text-fg-subtle mt-2">
+              <span className="font-semibold text-fg-muted">Forecast baseline:</span>{" "}
+              {BASELINE_SOURCE_COPY[result.baseline_source]}
+            </p>
+          )}
         </div>
-      </div>
+      </Card>
+      <Card title="Cash bridge" subtitle="Full year: beginning cash → drivers → ending cash">
+        <div className="px-4 py-4">
+          {ss ? <CashBridge ss={ss} /> : <Skeleton className="h-64 w-full" />}
+        </div>
+      </Card>
+      <Card title="Cash flow statement" subtitle="Operating · investing · financing, tied out to the cash balance">
+        <div className="px-5 py-4">
+          {ss ? <StatementTable ss={ss} /> : (
+            <div className="space-y-2">
+              {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-5 w-full" />)}
+            </div>
+          )}
+        </div>
+      </Card>
       {loading && !ss && <p className="text-xs text-fg-subtle">Loading projection…</p>}
     </div>
   );

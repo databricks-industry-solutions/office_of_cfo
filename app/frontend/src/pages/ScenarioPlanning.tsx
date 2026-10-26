@@ -15,6 +15,7 @@ import {
 } from "../components/ScenarioCompare";
 import { BarChartSkeleton, Card, CardSkeleton, ChartSkeleton, ErrorNote, Section, Skeleton, SkeletonRegion, TableSkeleton } from "../components/ui";
 import { OffLensAssumptions } from "../components/OffLensAssumptions";
+import type { PageId } from "../nav";
 import { CHART_AXIS_TEXT_DENSE, CHART_AXIS_TEXT_PIXEL, CHART_COLORS } from "../lib/chartPalette";
 import { cn } from "../lib/cn";
 import { catmullRomPath } from "../lib/runwayProjection";
@@ -36,11 +37,18 @@ const SLIDER_CFG: DriverSliderCfg[] = [
   { id: "dpo",            min: -15, max: 15, step: 1 },
   { id: "dio",            min: -15, max: 15, step: 1 },
   { id: "capex_pct",      min: 0, max: 15, step: 0.5 },
+  // Investing / financing (cash-only levers, % of revenue; dividends % of net income).
+  { id: "acquisitions",    min: 0, max: 25, step: 0.5 },
+  { id: "asset_sales",     min: 0, max: 25, step: 0.5 },
+  { id: "debt_draw",       min: 0, max: 25, step: 0.5 },
+  { id: "debt_repayment",  min: 0, max: 25, step: 0.5 },
+  { id: "dividend_payout", min: 0, max: 100, step: 5 },
 ];
 
-// The levers this lens edits. Financing/investing drivers (dividends, debt, M&A)
-// live on the Cash Flow lens; a scenario may carry them, so we surface any that are
-// set as read-only chips rather than dropping them on save.
+// Scenario Planning is the one place planning assumptions are edited: every driver
+// in the catalog has a slider here, and Cash Flow is a read-only lens on the saved
+// scenario. Any driver the catalog adds later without a slider still surfaces as a
+// read-only chip (OffLensAssumptions) rather than being dropped on save.
 const SLIDER_IDS = new Set(SLIDER_CFG.map((c) => c.id));
 
 // Which direction is "better" for each driver.
@@ -54,7 +62,19 @@ const DRIVER_BETTER: Record<string, "positive" | "negative"> = {
   dpo:            "positive",
   dio:            "negative",
   capex_pct:      "negative",
+  acquisitions:   "negative",
+  asset_sales:    "positive",
+  debt_draw:      "positive",
+  debt_repayment: "negative",
+  dividend_payout: "negative",
 };
+
+// Slider groups in the driver rail, top to bottom (the first is always open).
+const SLIDER_SECTIONS: { title: string; ids: string[] }[] = [
+  { title: "Working capital", ids: ["dso", "dpo", "dio"] },
+  { title: "Investing", ids: ["acquisitions", "asset_sales"] },
+  { title: "Financing", ids: ["debt_draw", "debt_repayment", "dividend_payout"] },
+];
 
 export const SECONDARY_TRAJECTORY_GRID_CLASS =
   "grid grid-cols-1 sm:grid-cols-2 gap-3 lg:flex-1 lg:min-h-0";
@@ -423,7 +443,8 @@ function Slider({
 function readout(id: string, v: number): string {
   if (v === 0) return "at baseline";
   if (id === "gross_margin") return `${v > 0 ? "+" : ""}${v}bps`;
-  if (id === "capex_pct") return `${v.toFixed(1)}% of rev`;
+  if (["capex_pct", "acquisitions", "asset_sales", "debt_draw", "debt_repayment"].includes(id)) return `${v.toFixed(1)}% of rev`;
+  if (id === "dividend_payout") return `${v}% of net income`;
   if (["dso","dpo","dio"].includes(id)) return `${v > 0 ? "+" : ""}${v}d`;
   return `${v > 0 ? "+" : ""}${v.toFixed(1)}%`;
 }
@@ -927,7 +948,18 @@ export function MetricComparisonToolbar({
 }
 
 // ── Main page ────────────────────────────────────────────────────────────────
-export default function ScenarioPlanning({ refreshKey, persona }: { refreshKey: number; persona: import("../api").Persona | null }) {
+/** `scenario=<id>` from the page's hash query (deep link from Cash Flow). */
+export function scenarioFromQuery(query: string | undefined): string | null {
+  return new URLSearchParams(query ?? "").get("scenario") || null;
+}
+
+export default function ScenarioPlanning({ refreshKey, persona, query, onNavigate }: {
+  refreshKey: number;
+  persona: import("../api").Persona | null;
+  /** Hash query, e.g. `scenario=<id>` to open a specific scenario. */
+  query?: string;
+  onNavigate?: (page: PageId, query?: string) => void;
+}) {
   const [mode, setMode] = useState<"plan" | "compare">("plan");
 
   // Catalog + plans list
@@ -1040,7 +1072,8 @@ export default function ScenarioPlanning({ refreshKey, persona }: { refreshKey: 
         // rather than a phantom, un-committable draft.
         setUnavailable(pl.unavailable === true || pl.plans.length === 0);
         const baseline = pl.plans.find((p) => p.is_baseline);
-        const first = baseline ?? pl.plans[0];
+        const linked = pl.plans.find((p) => p.scenario_id === scenarioFromQuery(query));
+        const first = linked ?? baseline ?? pl.plans[0];
         if (first) setSelectedId(first.scenario_id);
         // Compare starts from a locked baseline only; users select scenarios manually.
         const defaultIds = baseline ? [baseline.scenario_id] : [];
@@ -1681,23 +1714,29 @@ export default function ScenarioPlanning({ refreshKey, persona }: { refreshKey: 
                   })}
                 </SliderGroup>
 
-                <Section title="Working capital" defaultOpen={false} collapsible tone="quiet">
-                  <div className="px-4 py-3 space-y-3">
-                    {SLIDER_CFG.filter((c) => ["dso","dpo","dio"].includes(c.id)).map((cfg) => {
-                      const def = drivers.find((d) => d.id === cfg.id);
-                      return (
-                        <Slider key={cfg.id}
-                                label={def?.label ?? cfg.id}
-                                value={assumptions[cfg.id] ?? 0}
-                                min={cfg.min} max={cfg.max} step={cfg.step}
-                                onChange={(v) => setDriver(cfg.id, v)}
-                                readout={(v) => readout(cfg.id, v)}
-                                direction={DRIVER_BETTER[cfg.id]}
-                                disabled={isReadOnly || isBaseline} />
-                      );
-                    })}
-                  </div>
-                </Section>
+                {SLIDER_SECTIONS.map((sec) => {
+                  const moved = sec.ids.filter((id) => (assumptions[id] ?? 0) !== 0).length;
+                  return (
+                    <Section key={sec.title} collapsible tone="quiet" defaultOpen={false}
+                             title={moved ? `${sec.title} · ${moved} moved` : sec.title}>
+                      <div className="px-4 py-3 space-y-3">
+                        {SLIDER_CFG.filter((c) => sec.ids.includes(c.id)).map((cfg) => {
+                          const def = drivers.find((d) => d.id === cfg.id);
+                          return (
+                            <Slider key={cfg.id}
+                                    label={def?.label ?? cfg.id}
+                                    value={assumptions[cfg.id] ?? 0}
+                                    min={cfg.min} max={cfg.max} step={cfg.step}
+                                    onChange={(v) => setDriver(cfg.id, v)}
+                                    readout={(v) => readout(cfg.id, v)}
+                                    direction={DRIVER_BETTER[cfg.id]}
+                                    disabled={isReadOnly || isBaseline} />
+                          );
+                        })}
+                      </div>
+                    </Section>
+                  );
+                })}
 
                 <OffLensAssumptions drivers={drivers} assumptions={assumptions} editableIds={SLIDER_IDS} />
               </div>
@@ -1733,6 +1772,19 @@ export default function ScenarioPlanning({ refreshKey, persona }: { refreshKey: 
                     Frozen scenarios can be compared and published as the official forecast
                   </p>
                 </>
+              )}
+
+              {onNavigate && selectedId && (
+                <div className="text-center">
+                  <button type="button"
+                          onClick={() => onNavigate("cash-flow", `scenario=${encodeURIComponent(selectedId)}`)}
+                          className="text-xs text-accent hover:underline">
+                    View cash flow →
+                  </button>
+                  {isDirty && (
+                    <p className="text-[10px] text-fg-subtle mt-0.5">Save the draft to see these changes on Cash Flow</p>
+                  )}
+                </div>
               )}
 
               {!isBaseline && (

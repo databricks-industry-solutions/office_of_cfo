@@ -8,12 +8,14 @@ import { DriverDef } from "../api";
  * hidden on the other — we surface it here, read-only, instead of dropping it.
  */
 export function OffLensAssumptions({
-  drivers, assumptions, editableIds,
+  drivers, assumptions, editableIds, title = "Also in this scenario", note = "(set on another lens · read-only here)",
 }: {
   drivers: DriverDef[];
   assumptions: Record<string, number>;
   /** Driver ids this page renders as editable levers. */
   editableIds: Set<string>;
+  title?: string;
+  note?: string;
 }) {
   const items = drivers
     .filter((d) => !editableIds.has(d.id) && (assumptions[d.id] ?? 0) !== 0)
@@ -26,7 +28,7 @@ export function OffLensAssumptions({
   return (
     <div className="mt-3 rounded-lg bg-ink-700/40 ring-1 ring-line px-3 py-2">
       <div className="text-[11px] text-fg-subtle mb-1.5">
-        Also in this scenario <span className="text-fg-muted">(set on another lens · read-only here)</span>
+        {title} <span className="text-fg-muted">{note}</span>
       </div>
       <div className="flex flex-wrap gap-1.5">
         {items.map((it) => (
