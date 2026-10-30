@@ -16,9 +16,22 @@ import os
 import re
 from datetime import date
 
-from databricks.sdk import WorkspaceClient
+from databricks.sdk import WorkspaceClient, useragent
 
 from .industry import DEFAULT_INDUSTRY, resolve_industry
+
+# Deployment watermark: tag every Databricks SDK call this app makes with a
+# distinctive product token. The SDK prepends this to the User-Agent of all
+# control-plane requests (statement_execution, Genie, SCIM, ...), so any
+# deployment of this solution is detectable by a single cross-account scan of
+# central logfood (prod_http_access_log) for http_user_agent LIKE
+# 'office-of-cfo-solution/%'.
+WATERMARK_PRODUCT = "office-of-cfo-solution"
+WATERMARK_VERSION = "1.0.0"
+# Set the process-global default *and* pass it explicitly to every WorkspaceClient
+# below: WorkspaceClient() hardcodes product="unknown"/"0.0.0", which otherwise
+# overrides this global and drops the watermark.
+useragent.with_product(WATERMARK_PRODUCT, WATERMARK_VERSION)
 
 IS_DATABRICKS_APP = bool(os.environ.get("DATABRICKS_APP_NAME"))
 
@@ -247,10 +260,14 @@ def _sp_client() -> WorkspaceClient:
     global _client
     if _client is None:
         if IS_DATABRICKS_APP:
-            _client = WorkspaceClient()
+            _client = WorkspaceClient(product=WATERMARK_PRODUCT, product_version=WATERMARK_VERSION)
         else:
             profile = os.environ.get("DATABRICKS_CONFIG_PROFILE") or os.environ.get("DATABRICKS_PROFILE")
-            _client = WorkspaceClient(profile=profile) if profile else WorkspaceClient()
+            _client = (
+                WorkspaceClient(profile=profile, product=WATERMARK_PRODUCT, product_version=WATERMARK_VERSION)
+                if profile
+                else WorkspaceClient(product=WATERMARK_PRODUCT, product_version=WATERMARK_VERSION)
+            )
     return _client
 
 
@@ -277,7 +294,8 @@ def get_user_workspace_client() -> WorkspaceClient:
             # authorization method configured: oauth and pat"). auth_type="pat"
             # pins the SDK to the forwarded user token alone.
             cached = WorkspaceClient(
-                host=_workspace_host(), token=token, auth_type="pat")
+                host=_workspace_host(), token=token, auth_type="pat",
+                product=WATERMARK_PRODUCT, product_version=WATERMARK_VERSION)
             _user_clients[token] = cached
         return cached
     return _sp_client()

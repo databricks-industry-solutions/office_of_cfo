@@ -31,6 +31,15 @@ async def lifespan(app: FastAPI):
         pool.open(wait=True, timeout=20.0)
     except Exception as e:  # noqa: BLE001
         print(f"[startup] Lakebase pool not ready yet: {e}")
+    # Deployment watermark heartbeat: one lightweight SDK call at boot so every
+    # deployment emits at least one User-Agent-tagged control-plane request
+    # (office-of-cfo-solution/...), even if no one opens the app. Guarded so a
+    # failure never blocks startup. See server/config.py useragent.with_product.
+    try:
+        from server.config import get_workspace_client
+        get_workspace_client().current_user.me()
+    except Exception:  # noqa: BLE001
+        pass
     yield
     try:
         pool.close()
