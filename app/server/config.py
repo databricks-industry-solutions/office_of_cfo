@@ -16,9 +16,17 @@ import os
 import re
 from datetime import date
 
-from databricks.sdk import WorkspaceClient
+from databricks.sdk import WorkspaceClient, useragent
 
 from .industry import DEFAULT_INDUSTRY, resolve_industry
+
+# Deployment watermark: tag every Databricks SDK call this app makes with a
+# distinctive product token. The SDK prepends this to the User-Agent of all
+# control-plane requests (statement_execution, Genie, SCIM, ...), so any
+# deployment of this solution is detectable by a single cross-account scan of
+# central logfood (prod_http_access_log) for http_user_agent LIKE
+# 'office-of-cfo-solution/%'. Process-global; must run before any client is built.
+useragent.with_product("office-of-cfo-solution", "1.0.0")
 
 IS_DATABRICKS_APP = bool(os.environ.get("DATABRICKS_APP_NAME"))
 
