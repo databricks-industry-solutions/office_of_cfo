@@ -5,6 +5,7 @@ and writes adjustments to Lakebase (system of record), flowing them back to the
 lake so the real-time trial balance and live reconciliation reflect them.
 """
 import os
+import threading
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -33,13 +34,18 @@ async def lifespan(app: FastAPI):
         print(f"[startup] Lakebase pool not ready yet: {e}")
     # Deployment watermark heartbeat: one lightweight SDK call at boot so every
     # deployment emits at least one User-Agent-tagged control-plane request
-    # (office-of-cfo-solution/...), even if no one opens the app. Guarded so a
-    # failure never blocks startup. See server/config.py useragent.with_product.
-    try:
-        from server.config import get_workspace_client
-        get_workspace_client().current_user.me()
-    except Exception:  # noqa: BLE001
-        pass
+    # (office-of-cfo-solution/...), even if no one opens the app. It runs in a
+    # background thread so a slow or failing workspace API (the SDK retries for
+    # up to 5 minutes) never holds up startup, and a failure is logged, not
+    # raised. See server/config.py useragent.with_product.
+    def _heartbeat() -> None:
+        try:
+            from server.config import get_workspace_client
+            get_workspace_client().current_user.me()
+        except Exception as e:  # noqa: BLE001
+            print(f"[startup] watermark heartbeat failed: {e}")
+
+    threading.Thread(target=_heartbeat, name="watermark-heartbeat", daemon=True).start()
     yield
     try:
         pool.close()
