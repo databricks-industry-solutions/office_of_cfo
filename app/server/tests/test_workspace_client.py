@@ -12,6 +12,9 @@ if str(_APP) not in sys.path:
 from server import config  # noqa: E402
 
 
+_WATERMARK = {"product": config.WATERMARK_PRODUCT, "product_version": config.WATERMARK_VERSION}
+
+
 def _reset_clients() -> None:
     config._client = None
     config._user_clients.clear()
@@ -26,7 +29,7 @@ def test_data_client_ignores_forwarded_user_token():
         config.set_user_token("forwarded-token")
 
         assert config.get_workspace_client() is sp_client
-        client.assert_called_once_with()
+        client.assert_called_once_with(**_WATERMARK)
 
 
 def test_user_client_uses_forwarded_token_when_present():
@@ -52,5 +55,16 @@ def test_user_client_falls_back_to_data_client_without_token():
         _reset_clients()
 
         assert config.get_user_workspace_client() is sp_client
-        client.assert_called_once_with()
+        client.assert_called_once_with(**_WATERMARK)
 
+
+
+def test_obo_client_carries_watermark():
+    with mock.patch.object(config, "IS_DATABRICKS_APP", True), \
+         mock.patch.object(config, "WorkspaceClient", return_value=object()) as client:
+        _reset_clients()
+        config.set_user_token("forwarded-token")
+
+        config.get_user_workspace_client()
+        assert client.call_args.kwargs["product"] == config.WATERMARK_PRODUCT
+        assert client.call_args.kwargs["product_version"] == config.WATERMARK_VERSION
