@@ -1,0 +1,26 @@
+# Code owners for office_of_cfo.
+# The last matching pattern wins, so specific paths must come after the default.
+# Teams must stay visible and keep write access on this repo, otherwise GitHub ignores their lines.
+
+# Default: any developer can review app code (incl. publish-bot release PRs)
+*                       @databricks-industry-solutions/office_of_cfo-developers
+
+# Public-owned accelerator shell: never changed by the private -> public publish flow, admins only
+/databricks.yml         @databricks-industry-solutions/office_of_cfo-admins
+/resources/             @databricks-industry-solutions/office_of_cfo-admins
+/scripts/setup.py       @databricks-industry-solutions/office_of_cfo-admins
+/.github/               @databricks-industry-solutions/office_of_cfo-admins
+/LICENSE.md             @databricks-industry-solutions/office_of_cfo-admins
+/NOTICE.md              @databricks-industry-solutions/office_of_cfo-admins
+/SECURITY.md            @databricks-industry-solutions/office_of_cfo-admins
+/CONTRIBUTING.md        @databricks-industry-solutions/office_of_cfo-admins
+/AGENTS.md              @databricks-industry-solutions/office_of_cfo-admins
+/CLAUDE.md              @databricks-industry-solutions/office_of_cfo-admins
+/README.md              @databricks-industry-solutions/office_of_cfo-admins
+
+# Public-only guard tests: weakening them weakens the publish gate
+/data_generation/tests/test_bundle_guards.py           @databricks-industry-solutions/office_of_cfo-admins
+/data_generation/tests/test_no_company_lists.py        @databricks-industry-solutions/office_of_cfo-admins
+/data_generation/tests/test_industry_lists_in_sync.py  @databricks-industry-solutions/office_of_cfo-admins
+/data_generation/tests/test_setup_industry_subset.py   @databricks-industry-solutions/office_of_cfo-admins
+/app/server/tests/test_installed_industries.py         @databricks-industry-solutions/office_of_cfo-admins
